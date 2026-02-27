@@ -9,7 +9,7 @@ type location = Lexing.position * Lexing.position
 
 type ident = { loc: location; id: string; }
 
-type op = Badd | Bsub | Bmul | Bdiv | Bminus | Bmod | Beq | Bneq | Blt | Bgt 
+type op = Badd | Bsub | Bmul | Bdiv | Bminus | Bmod | Bassign | Bneq | Blt | Bgt 
 | Ble | Bge | Bandalso | Borelse | Bnot
 
 type expr =

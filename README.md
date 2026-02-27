@@ -1,4 +1,4 @@
-# A compiler for the While language
+# A compiler for the Cakeml language
 
 ## Usage
 

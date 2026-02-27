@@ -43,7 +43,6 @@ type token =
   | BLE
   | BGT
   | BGE
-  | BEQ
   | BDIV
   | BADD
   | ASSIGN_REF

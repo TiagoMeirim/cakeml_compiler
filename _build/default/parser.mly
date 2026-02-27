@@ -21,7 +21,7 @@
 %token UNDERSCORE
 %token TRUE FALSE
 %token ANDALSO ORELSE
-%token BEQ BNEQ BLT BGT BLE BGE
+%token BNEQ BLT BGT BLE BGE
 %token BADD BSUB BMUL BDIV BMINUS BMOD
 %token EOF
 %token <string> GOSPEL_COMMENT
@@ -29,7 +29,7 @@
 %left SEMICOLON
 
 %left ANDALSO ORELSE
-%left BEQ BNEQ BLT BGT BLE BGE
+%left BNEQ BLT BGT BLE BGE
 %left BADD BSUB
 %left BMUL BDIV BMOD
 
@@ -165,6 +165,7 @@ expr_seq_tail:
 ;
 
 %inline op:
+| ASSIGN { Bassign }
 | BADD { Badd }
 | BSUB { Bsub }
 | BMUL { Bmul }
@@ -173,7 +174,6 @@ expr_seq_tail:
 | BMOD { Bmod }
 | ANDALSO  { Bandalso }
 | ORELSE   { Borelse }
-| BEQ  { Beq }
 | BNEQ { Bneq }
 | BLT  { Blt }
 | BGT  { Bgt }

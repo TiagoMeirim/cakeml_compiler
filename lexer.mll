@@ -49,7 +49,6 @@ rule token = parse
                   read_gospel_comment buf lexbuf;
                   GOSPEL_COMMENT (Buffer.contents buf) }
   | "(*"        { read_comment lexbuf; token lexbuf }
-  | "=="        { BEQ }
   | "!="        { BNEQ }
   | "<="        { BLE }
   | ">="        { BGE }

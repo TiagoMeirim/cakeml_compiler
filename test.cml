@@ -66,10 +66,47 @@ fun swap pair =
     _ => (x, y)
     | (x, y) => (x, y)
 
+exception Not_found
+
+fun find t k =
+  (case t of
+    Leaf => raise Not_found
+  | (Node _ l kqt v r) => 
+    if k = kqt then (v)  else (if k < kqt then (find l k)  else (find r k)))
+
 fun lbalance l k v r =
   (case l of
     (Node Red (Node Red a kx vx b) ky vy c) =>
     Node (Red) (Node (Black) a kx vx b) ky vy (Node (Black) c k v r)
-    | (Node Red a kx vx (Node Red b ky vy c)) =>
+  | (Node Red a kx vx (Node Red b
+    ky vy c)) =>
     Node (Red) (Node (Black) a kx vx b) ky vy (Node (Black) c k v r)
   | _ => Node (Black) l k v r)
+
+fun rbalance l k v r =
+  (case r of
+    (Node Red (Node Red b ky vy c) kz vz d) =>
+    Node (Red) (Node (Black) l k v b) ky vy (Node (Black) c kz vz d)
+    | (Node Red b ky vy (Node Red c
+    kz vz d)) =>
+    Node (Red) (Node (Black) l k v b) ky vy (Node (Black) c kz vz d)
+  | _ => Node (Black) l k v r)
+
+fun insert t k v =
+  (case t of
+    Leaf => Node (Red) (Leaf) k v (Leaf)
+  | (Node Red l kqt vqt r) =>
+    if k < kqt then (Node (Red) (insert l k v) kqt vqt r) 
+    else (if kqt < k then (Node (Red) l kqt vqt (insert r k v)) 
+          else (Node (Red) l kqt v r))
+  | (Node Black l kqt vqt r) =>
+    if k < kqt then (lbalance (insert l k v) kqt vqt r) 
+    else (if kqt < k then (rbalance l kqt vqt (insert r k v)) 
+          else (Node (Black) l kqt v r)))
+
+exception Absurd
+
+fun add t k v =
+  (case insert t k v of
+    (Node _ l kqt vqt r) => Node (Black) l kqt vqt r
+  | Leaf => raise Absurd)
