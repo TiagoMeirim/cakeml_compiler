@@ -5,6 +5,6 @@
  (modules parser))
 
 (executable
- (public_name while_compiler)
+ (public_name cakeml_compiler)
  (promote (until-clean))
  (flags ()))

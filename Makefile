@@ -1,12 +1,15 @@
 
-all: while_compiler.exe
-	./while_compiler.exe --debug test.wl
-	gcc -no-pie -g test.s && ./a.out
+# all: cakeml_compiler.exe
+# 	./cakeml_compiler.exe --debug test.cml
+# 	gcc -no-pie -g test.s && ./a.out
 
-while_compiler.exe:
-	dune build while_compiler.exe
+all: cakeml_compiler.exe
+	./cakeml_compiler.exe test.cml
+
+cakeml_compiler.exe:
+	dune build cakeml_compiler.exe
 
 clean:
 	dune clean
 
-.PHONY: all clean while_compiler.exe
+.PHONY: all clean cakeml_compiler.exe

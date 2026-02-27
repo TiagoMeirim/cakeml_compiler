@@ -1,0 +1,16 @@
+# dune build cakeml_compiler.exe
+# OCAMLPARAM: unset
+# Shared cache: enabled-except-user-rules
+# Shared cache location: /Users/tiagomeirim/.cache/dune/db
+# Workspace root: /Users/tiagomeirim/Desktop/cakeml_compiler
+# Auto-detected concurrency: 8
+# Dune context:
+#  { name = "default"
+#  ; kind = "default"
+#  ; profile = Dev
+#  ; merlin = true
+#  ; fdo_target_exe = None
+#  ; build_dir = In_build_dir "default"
+#  ; instrument_with = []
+#  }
+$ /Users/tiagomeirim/.opam/4.12.1/bin/ocamlc.opt -config > /var/folders/ps/pbqdc_gn3t358v_lc2d7m7kw0000gn/T/dune_292437_output

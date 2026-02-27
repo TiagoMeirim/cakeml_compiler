@@ -1,0 +1,75 @@
+type key = int
+
+type value = int
+
+datatype color = Red | Black
+
+datatype tree = Leaf | Node color tree (int) (int) tree
+(*@ function rec to_list (t: 'a tree) : 'a list = 
+  match t with
+  | Leaf -> []
+  | Node l x r -> x :: to_list l @ to_list r
+*)
+(*@
+  variant t
+*)
+
+datatype 'a ttree = Leaf | Node ('a ttree) 'a ('a ttree)
+
+fun negate_if_positive x =
+  if x > 0 then -x else x
+
+fun complicated a b c =
+  if a > b then (a + b) * c else (b - c)
+
+fun nested_if x y z =
+  if x > y then x
+  else if y > z then y
+  else z
+
+fun logical_test x y =
+  if (x > 0) andalso (y < 0) then x else y
+
+fun mix_ops x y =
+  if x + y > 0 then -x else -y
+
+fun compute x y =
+  if x > y then let z = x - y in z * 2 end
+  else let z = y - x in z * 3 end
+
+fun complex x y z =
+  if x > y then - (x + y)
+  else if y > z then - (y - z)
+  else -z
+
+exception Division_By_Zero
+
+fun exception_test x y =
+  if y > 0 then raise Division_By_Zero
+  else x / y
+
+fun fun_calling a b = exception_test (a b)
+
+fun ref_test y = 
+  let x = Ref 0 in x end
+
+fun inc x =
+  x := !x + 1
+
+fun negate b =
+  case b of
+    True  => False
+  | False => True
+
+fun swap pair =
+  case pair of
+    _ => (x, y)
+    | (x, y) => (x, y)
+
+fun lbalance l k v r =
+  (case l of
+    (Node Red (Node Red a kx vx b) ky vy c) =>
+    Node (Red) (Node (Black) a kx vx b) ky vy (Node (Black) c k v r)
+    | (Node Red a kx vx (Node Red b ky vy c)) =>
+    Node (Red) (Node (Black) a kx vx b) ky vy (Node (Black) c k v r)
+  | _ => Node (Black) l k v r)
