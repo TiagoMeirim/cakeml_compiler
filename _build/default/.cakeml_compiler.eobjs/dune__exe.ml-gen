@@ -3,11 +3,17 @@
 (** @canonical Dune__exe.Ast *)
 module Ast = Dune__exe__Ast
 
+(** @canonical Dune__exe.Ast2gast *)
+module Ast2gast = Dune__exe__Ast2gast
+
 (** @canonical Dune__exe.Cakeml_compiler *)
 module Cakeml_compiler = Dune__exe__Cakeml_compiler
 
 (** @canonical Dune__exe.Compile *)
 module Compile = Dune__exe__Compile
+
+(** @canonical Dune__exe.Gast *)
+module Gast = Dune__exe__Gast
 
 (** @canonical Dune__exe.Lexer *)
 module Lexer = Dune__exe__Lexer

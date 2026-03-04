@@ -1,112 +1,86 @@
+(*@ predicate memt (t: tree) (k: key) (v: value) =
+    match t with
+    | Leaf -> false
+    | Node _ l k' v' r -> (k = k' && v = v') || memt l k v || memt r k v *)
+
+(*@ predicate bst (t: tree) =
+    match t with
+    | Leaf -> true
+    | Node _ l k _ r -> bst l && bst r && lt_tree k l && gt_tree k r *)
+
+(*@ predicate lt_tree (x: key) (t: tree) =
+    forall k: key. forall v: value. memt t k v -> k < x *)
+
+(*@ predicate gt_tree (x: key) (t: tree) =
+    forall k: key. forall v: value. memt t k v -> x < k *)
+
 type key = int
-
 type value = int
-
 datatype color = Red | Black
-
 datatype tree = Leaf | Node color tree (int) (int) tree
-(*@ function rec to_list (t: 'a tree) : 'a list = 
-  match t with
-  | Leaf -> []
-  | Node l x r -> x :: to_list l @ to_list r
-*)
-(*@
-  variant t
-*)
-
-datatype 'a ttree = Leaf | Node ('a ttree) 'a ('a ttree)
-
-fun negate_if_positive x =
-  if x > 0 then -x else x
-
-fun complicated a b c =
-  if a > b then (a + b) * c else (b - c)
-
-fun nested_if x y z =
-  if x > y then x
-  else if y > z then y
-  else z
-
-fun logical_test x y =
-  if (x > 0) andalso (y < 0) then x else y
-
-fun mix_ops x y =
-  if x + y > 0 then -x else -y
-
-fun compute x y =
-  if x > y then let z = x - y in z * 2 end
-  else let z = y - x in z * 3 end
-
-fun complex x y z =
-  if x > y then - (x + y)
-  else if y > z then - (y - z)
-  else -z
-
-exception Division_By_Zero
-
-fun exception_test x y =
-  if y > 0 then raise Division_By_Zero
-  else x / y
-
-fun fun_calling a b = exception_test (a b)
-
-fun ref_test y = 
-  let x = Ref 0 in x end
-
-fun inc x =
-  x := !x + 1
-
-fun negate b =
-  case b of
-    True  => False
-  | False => True
-
-fun swap pair =
-  case pair of
-    _ => (x, y)
-    | (x, y) => (x, y)
 
 exception Not_found
 
 fun find t k =
   (case t of
     Leaf => raise Not_found
-  | (Node _ l kqt v r) => 
-    if k = kqt then (v)  else (if k < kqt then (find l k)  else (find r k)))
+  | (Node _ l kqt v r) =>
+    if k = kqt then v
+    else if k < kqt then find l k
+    else find r k)
+(*@ r = find t k
+    requires bst t
+    ensures memt t k r
+    variant t *)
 
 fun lbalance l k v r =
   (case l of
     (Node Red (Node Red a kx vx b) ky vy c) =>
-    Node (Red) (Node (Black) a kx vx b) ky vy (Node (Black) c k v r)
-  | (Node Red a kx vx (Node Red b
-    ky vy c)) =>
-    Node (Red) (Node (Black) a kx vx b) ky vy (Node (Black) c k v r)
-  | _ => Node (Black) l k v r)
+      Node Red (Node Black a kx vx b) ky vy (Node Black c k v r)
+  | (Node Red a kx vx (Node Red b ky vy c)) =>
+      Node Red (Node Black a kx vx b) ky vy (Node Black c k v r)
+  | _ => Node Black l k v r)
+(*@ r = lbalance l k v rr
+    requires lt_tree k l && gt_tree k rr && bst l && bst rr
+    ensures bst r *)
 
 fun rbalance l k v r =
   (case r of
     (Node Red (Node Red b ky vy c) kz vz d) =>
-    Node (Red) (Node (Black) l k v b) ky vy (Node (Black) c kz vz d)
-    | (Node Red b ky vy (Node Red c
-    kz vz d)) =>
-    Node (Red) (Node (Black) l k v b) ky vy (Node (Black) c kz vz d)
-  | _ => Node (Black) l k v r)
+      Node Red (Node Black l k v b) ky vy (Node Black c kz vz d)
+  | (Node Red b ky vy (Node Red c kz vz d)) =>
+      Node Red (Node Black l k v b) ky vy (Node Black c kz vz d)
+  | _ => Node Black l k v r)
+(*@ r = rbalance l k v rr
+    requires lt_tree k l && gt_tree k rr && bst l && bst rr
+    ensures bst r *)
 
 fun insert t k v =
   (case t of
-    Leaf => Node (Red) (Leaf) k v (Leaf)
+    Leaf => Node Red Leaf k v Leaf
   | (Node Red l kqt vqt r) =>
-    if k < kqt then (Node (Red) (insert l k v) kqt vqt r) 
-    else (if kqt < k then (Node (Red) l kqt vqt (insert r k v)) 
-          else (Node (Red) l kqt v r))
+    if k < kqt then Node Red (insert l k v) kqt vqt r
+    else if kqt < k then Node Red l kqt vqt (insert r k v)
+    else Node Red l kqt v r
   | (Node Black l kqt vqt r) =>
-    if k < kqt then (lbalance (insert l k v) kqt vqt r) 
-    else (if kqt < k then (rbalance l kqt vqt (insert r k v)) 
-          else (Node (Black) l kqt v r)))
+    if k < kqt then lbalance (insert l k v) kqt vqt r
+    else if kqt < k then rbalance l kqt vqt (insert r k v)
+    else Node Black l kqt v r)
+(*@ r = insert t k v
+    requires bst t
+    ensures bst r
+    ensures memt r k v
+    variant t *)
 
 exception Absurd
 
 fun add t k v =
   (case insert t k v of
-    (Node _ l kqt vqt r) => Node (Black) l kqt vqt r
+    (Node _ l kqt vqt r) => Node Black l kqt vqt r
   | Leaf => raise Absurd)
+(*@ r = add t k v
+    requires bst t
+    ensures bst r
+    ensures memt r k v *)
+
+exception ErrorMsg string

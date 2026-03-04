@@ -2,24 +2,26 @@
 (* The type of tokens. *)
 
 type token = 
+  | VAL
   | UNDERSCORE
   | TYVAR of (string)
   | TYPE
   | TRUE
   | THEN
+  | STRING of (string)
   | SEMICOLON
+  | RSBRACKET
   | RPAR
   | REF
-  | RCURLY
   | RAISE
   | PRINT
   | PIPE
   | ORELSE
   | OF
   | NUM of (int)
+  | LSBRACKET
   | LPAR
   | LET
-  | LCURLY
   | IN
   | IF
   | IDENT of (string)
@@ -32,6 +34,7 @@ type token =
   | ELSE
   | DEREF
   | DATATYPE
+  | CONS
   | COMMA
   | CASE
   | BSUB
@@ -48,6 +51,7 @@ type token =
   | ASSIGN_REF
   | ASSIGN
   | ARROW
+  | APPEND
   | ANDALSO
 
 (* This exception is raised by the monolithic API functions. *)

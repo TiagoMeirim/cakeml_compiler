@@ -28,9 +28,17 @@ type expr =
   | Eassign        of expr * expr
   | Ecase          of expr * case_clause list
   | Econstr        of ident * expr list
-  | Egospel_inline of string
+  | Enil
+  | Elist          of expr list
+  | Econs          of expr * expr 
+  | Eappend        of expr * expr
+  | Estring        of string
+  | Eprint         of expr
 
 and pattern =
+  | Pnil
+  | Plist   of pattern list
+  | Pcons   of pattern * pattern
   | Pvar    of ident (* variable *)
   | Pwild (* _ *)
   | Pcst    of int (* int *)
@@ -40,13 +48,11 @@ and pattern =
 
 and case_clause = pattern * expr
 
-(* type stmt =
-  | Scase   of expr * (pattern * stmt) list *)
-
 type def = {
   name    : ident; 
   formals : ident list; 
-  body    : expr 
+  body    : expr;
+  (* spec    : string option; *)
 }
 
 type typ = 
@@ -64,7 +70,7 @@ type constructor = {
 }
 
 type toplevel = 
-| Texn         of ident
+| Texn         of ident * typ option
 | Tdef         of def
 | Tdatatype    of string list * ident * constructor list
 | Ttype        of ident * typ

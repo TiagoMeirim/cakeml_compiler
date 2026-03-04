@@ -13,36 +13,4 @@
 #  ; build_dir = In_build_dir "default"
 #  ; instrument_with = []
 #  }
-$ /Users/tiagomeirim/.opam/4.12.1/bin/ocamlc.opt -config > /var/folders/ps/pbqdc_gn3t358v_lc2d7m7kw0000gn/T/dune_fb52fb_output
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamllex -q -o lexer.ml lexer.mll)
-$ (cd _build/.sandbox/6271257e6c2179393bac24b4d340ca3a/default && /Users/tiagomeirim/.opam/4.12.1/bin/menhir parser.mly --base parser --infer-write-query parser__mock.ml.mock)
-> File "parser.mly", line 19, characters 7-13:
-> Warning: the token LCURLY is unused.
-> File "parser.mly", line 10, characters 31-36:
-> Warning: the token PRINT is unused.
-> File "parser.mly", line 19, characters 14-20:
-> Warning: the token RCURLY is unused.
-> File "parser.mly", line 20, characters 13-22:
-> Warning: the token SEMICOLON is unused.
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamldep.opt -modules -impl lexer.ml) > _build/default/.cakeml_compiler.eobjs/dune__exe__Lexer.impl.d
-$ (cd _build/.sandbox/4da2521afee8dbffe39330fba8ce37f2/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamldep.opt -modules -impl parser__mock.ml.mock) > _build/.sandbox/4da2521afee8dbffe39330fba8ce37f2/default/.cakeml_compiler.eobjs/parser__mock.impl.d
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamldep.opt -modules -impl ast.ml) > _build/default/.cakeml_compiler.eobjs/dune__exe__Ast.impl.d
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamlc.opt -g -bin-annot -I .cakeml_compiler.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .cakeml_compiler.eobjs/byte/dune__exe__Ast.cmo -c -impl ast.ml)
-$ (cd _build/.sandbox/1800d5f789304899c4f3e77b93f811b6/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamlc.opt -g -I .cakeml_compiler.eobjs/byte -open Dune__exe -short-paths -i -impl parser__mock.ml.mock) > _build/.sandbox/1800d5f789304899c4f3e77b93f811b6/default/parser__mock.mli.inferred
-$ (cd _build/.sandbox/56184d5c8752dbab2e47ea92d3adfcab/default && /Users/tiagomeirim/.opam/4.12.1/bin/menhir parser.mly --base parser --infer-read-reply parser__mock.mli.inferred)
-> File "parser.mly", line 29, characters 0-5:
-> Warning: the precedence level assigned to SEMICOLON is never useful.
-> Warning: 27 states have shift/reduce conflicts.
-> Warning: 2 states have reduce/reduce conflicts.
-> Warning: 148 shift/reduce conflicts were arbitrarily resolved.
-> Warning: 13 reduce/reduce conflicts were arbitrarily resolved.
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamldep.opt -modules -intf parser.mli) > _build/default/.cakeml_compiler.eobjs/dune__exe__Parser.intf.d
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamldep.opt -modules -impl parser.ml) > _build/default/.cakeml_compiler.eobjs/dune__exe__Parser.impl.d
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamlc.opt -g -bin-annot -I .cakeml_compiler.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .cakeml_compiler.eobjs/byte/dune__exe__Parser.cmi -c -intf parser.mli)
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamlc.opt -g -bin-annot -I .cakeml_compiler.eobjs/byte -no-alias-deps -opaque -open Dune__exe -o .cakeml_compiler.eobjs/byte/dune__exe__Lexer.cmo -c -impl lexer.ml)
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamlopt.opt -g -I .cakeml_compiler.eobjs/byte -I .cakeml_compiler.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .cakeml_compiler.eobjs/native/dune__exe__Ast.cmx -c -impl ast.ml)
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamlopt.opt -g -I .cakeml_compiler.eobjs/byte -I .cakeml_compiler.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .cakeml_compiler.eobjs/native/dune__exe__Cakeml_compiler.cmx -c -impl cakeml_compiler.ml)
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamlopt.opt -g -I .cakeml_compiler.eobjs/byte -I .cakeml_compiler.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .cakeml_compiler.eobjs/native/dune__exe__Lexer.cmx -c -impl lexer.ml)
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamlopt.opt -g -I .cakeml_compiler.eobjs/byte -I .cakeml_compiler.eobjs/native -intf-suffix .ml -no-alias-deps -opaque -open Dune__exe -o .cakeml_compiler.eobjs/native/dune__exe__Parser.cmx -c -impl parser.ml)
-$ (cd _build/default && /Users/tiagomeirim/.opam/4.12.1/bin/ocamlopt.opt -g -o cakeml_compiler.exe .cakeml_compiler.eobjs/native/dune__exe.cmx .cakeml_compiler.eobjs/native/dune__exe__Ast.cmx .cakeml_compiler.eobjs/native/dune__exe__Parser.cmx .cakeml_compiler.eobjs/native/dune__exe__Lexer.cmx .cakeml_compiler.eobjs/native/dune__exe__Cakeml_compiler.cmx)
-# Promoting "_build/default/cakeml_compiler.exe" to "cakeml_compiler.exe"
+$ /Users/tiagomeirim/.opam/4.12.1/bin/ocamlc.opt -config > /var/folders/ps/pbqdc_gn3t358v_lc2d7m7kw0000gn/T/dune_d2a1f2_output

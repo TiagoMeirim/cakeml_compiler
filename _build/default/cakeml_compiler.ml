@@ -36,19 +36,23 @@ let () =
   let c = open_in file in
   let lb = Lexing.from_channel c in
   try
-    let _ = Parser.file Lexer.token lb in
+    (* Phase 1 - cakeml parsing *)
+    let ast = Parser.file Lexer.token lb in
     close_in c;
+
     if !parse_only then exit 0;
-    (* let f = Parser.file Lexer.token lb in
-    close_in c;
-    if !parse_only then exit 0;
-    let f = Typing.file ~debug f in
-    if !type_only then exit 0;
-    let code = Compile.file ~debug f in
-    let c = open_out (Filename.chop_suffix file ".cml" ^ ".s") in
-    let fmt = formatter_of_out_channel c in
-    X86_64.print_program fmt code;
-    close_out c *)
+
+    (* Phase 2 - ast to gast *)
+    let gast = Ast2gast.ast_to_gast ast in
+    Printf.printf "GAST phase done, %d toplevel items\n" (List.length gast);
+    List.iter (function
+      | Gast.GTgospel_func _ -> Printf.printf "Gospel spec parsed successfully!\n"
+      | Gast.GTgospel_axiom _ -> Printf.printf "Gospel spec parsed successfully!\n"
+      | Gast.GTdef d -> (match d.spec with
+        | Some _ -> Printf.printf "Def %s with gospel spec parsed successfully!\n" d.name.id
+        | None   -> Printf.printf "Def %s parsed successfully!\n" d.name.id)
+      | _ -> ()
+    ) gast
   with
     | Lexer.Lexing_error s ->
 	report (lexeme_start_p lb, lexeme_end_p lb);
@@ -58,10 +62,6 @@ let () =
 	report (lexeme_start_p lb, lexeme_end_p lb);
 	eprintf "syntax error@.";
 	exit 1
-    (* | Typing.Error (loc, s) ->
-        report loc;
-        eprintf "error: %s@." s;
-        exit 1 *)
     | e ->
 	eprintf "Anomaly: %s\n@." (Printexc.to_string e);
 	exit 2

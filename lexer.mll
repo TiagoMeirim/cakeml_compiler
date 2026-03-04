@@ -9,8 +9,10 @@
     "andalso", ANDALSO;
     "orelse", ORELSE;
     "let", LET;
+    "val", VAL;
     "in", IN;
     "end", END;
+    "print", PRINT;
     "if", IF;
     "then", THEN;
     "else", ELSE;
@@ -30,6 +32,8 @@
     let h = Hashtbl.create 4 in
     List.iter (fun (s, t) -> Hashtbl.add h s t) kwds;
     fun x -> try Hashtbl.find h x with Not_found -> IDENT x
+
+  let buf = Buffer.create 64
 }
 
 let char = ['a'-'z' 'A'-'Z' '_']
@@ -45,8 +49,9 @@ rule token = parse
   | ident as s  { id_or_kwd s }
   | number as n { NUM (int_of_string n) }
   | '\'' ['a'-'z']+ as id { TYVAR id }
-  | "(*@"       { let buf = Buffer.create 64 in
-                  read_gospel_comment buf lexbuf;
+  | '"' ([^'"']* as s) '"' { STRING s }
+  | "(*@"       { Buffer.clear buf;
+                  read_gospel_comment lexbuf;
                   GOSPEL_COMMENT (Buffer.contents buf) }
   | "(*"        { read_comment lexbuf; token lexbuf }
   | "!="        { BNEQ }
@@ -54,6 +59,10 @@ rule token = parse
   | ">="        { BGE }
   | ":="        { ASSIGN_REF }
   | "=>"        { ARROW }
+  | "::"        { CONS }
+  | '@'         { APPEND }
+  | '['         { LSBRACKET }
+  | ']'         { RSBRACKET }
   | '!'         { DEREF }
   | '<'         { BLT }
   | '>'         { BGT }
@@ -62,8 +71,8 @@ rule token = parse
   | '*'         { BMUL }
   | '/'         { BDIV }
   | '%'         { BMOD }
-  | '{'         { LCURLY }
-  | '}'         { RCURLY }
+  (* | '{'         { LCURLY }
+  | '}'         { RCURLY } *)
   | '('         { LPAR }
   | ')'         { RPAR }
   | '='         { ASSIGN }
@@ -75,11 +84,10 @@ rule token = parse
   | _ as c      { raise (Lexing_error
                     ("Ilegal char: " ^ String.make 1 c)) }
 
-and read_gospel_comment buf = parse
+and read_gospel_comment = parse
   | "*)"        { () }
   | eof         { raise (Lexing_error "Unterminated comment") }
-  | _ as c      { Buffer.add_char buf c; read_gospel_comment buf lexbuf }
-
+  | _ as c      { Buffer.add_char buf c; read_gospel_comment lexbuf }
 
 and read_comment = parse
   | "*)"        { () }

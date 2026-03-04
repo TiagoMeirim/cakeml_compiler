@@ -5,6 +5,8 @@
  (modules parser))
 
 (executable
+ (name cakeml_compiler)
+ (libraries gospel)
  (public_name cakeml_compiler)
  (promote (until-clean))
  (flags ()))
