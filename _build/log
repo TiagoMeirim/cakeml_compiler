@@ -1,4 +1,4 @@
-# dune build cakeml_compiler.exe
+# dune build
 # OCAMLPARAM: unset
 # Shared cache: enabled-except-user-rules
 # Shared cache location: /Users/tiagomeirim/.cache/dune/db
@@ -13,4 +13,4 @@
 #  ; build_dir = In_build_dir "default"
 #  ; instrument_with = []
 #  }
-$ /Users/tiagomeirim/.opam/4.12.1/bin/ocamlc.opt -config > /var/folders/ps/pbqdc_gn3t358v_lc2d7m7kw0000gn/T/dune_d2a1f2_output
+$ /Users/tiagomeirim/.opam/4.12.1/bin/ocamlc.opt -config > /var/folders/ps/pbqdc_gn3t358v_lc2d7m7kw0000gn/T/dune_e2f886_output

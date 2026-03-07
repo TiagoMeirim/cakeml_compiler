@@ -1,0 +1,8 @@
+(lang dune 3.20)
+(name cakeml_compiler)
+(version 0.1)
+(sections (lib .) (bin ../../bin) (doc ../../doc/cakeml_compiler))
+(files
+ (lib (META dune-package opam))
+ (bin (cakeml_compiler))
+ (doc (LICENSE README.md)))

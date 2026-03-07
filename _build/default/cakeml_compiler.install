@@ -1,0 +1,12 @@
+lib: [
+  "_build/install/default/lib/cakeml_compiler/META"
+  "_build/install/default/lib/cakeml_compiler/dune-package"
+  "_build/install/default/lib/cakeml_compiler/opam"
+]
+bin: [
+  "_build/install/default/bin/cakeml_compiler"
+]
+doc: [
+  "_build/install/default/doc/cakeml_compiler/LICENSE"
+  "_build/install/default/doc/cakeml_compiler/README.md"
+]

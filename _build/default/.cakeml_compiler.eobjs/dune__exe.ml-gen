@@ -21,6 +21,9 @@ module Lexer = Dune__exe__Lexer
 (** @canonical Dune__exe.Parser *)
 module Parser = Dune__exe__Parser
 
+(** @canonical Dune__exe.Pp_gast *)
+module Pp_gast = Dune__exe__Pp_gast
+
 (** @canonical Dune__exe.Typing *)
 module Typing = Dune__exe__Typing
 

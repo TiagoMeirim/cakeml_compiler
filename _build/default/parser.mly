@@ -20,7 +20,6 @@
 %token CASE OF ARROW
 // %token LCURLY RCURLY
 %token LPAR RPAR
-// %token SEMICOLON
 %token COMMA SEMICOLON ASSIGN
 %token UNDERSCORE
 %token TRUE FALSE
@@ -53,15 +52,15 @@ file:
 ;
 
 toplevel:
-| EXCEPTION x = ident 
+| EXCEPTION x = ident option(SEMICOLON)
     { Texn (x, None) }
-| EXCEPTION x = ident t = atyp
+| EXCEPTION x = ident t = atyp option(SEMICOLON)
     { Texn (x, Some t) }
-| DATATYPE ty = tyvar_list x = ident ASSIGN c = constructor_list
+| DATATYPE ty = tyvar_list x = ident ASSIGN c = constructor_list option(SEMICOLON)
     { Tdatatype (ty, x, c) }
-| TYPE x = ident ASSIGN c = typ
+| TYPE x = ident ASSIGN c = typ option(SEMICOLON)
     { Ttype (x, c) }
-| d = def 
+| d = def option(SEMICOLON)
     { Tdef d }
 | s = GOSPEL_COMMENT 
     { Tgospel_spec s }
@@ -116,9 +115,11 @@ aexpr:
 
 expr:
 | e = aexpr { e }
-| cname = ident args = aexpr+ { Econstr(cname, args) }
 | PRINT e = aexpr { Eprint e }
-| f = ident LPAR args = expr* RPAR { Ecall(f, args) }
+| f = ident args = aexpr+ {
+    if Char.uppercase_ascii f.id.[0] = f.id.[0]
+    then Econstr(f, args)
+    else Ecall(f, args) }
 | REF e = expr { Eref e }
 | DEREF e = expr %prec DEREF { Ederef e }
 | BSUB e = expr %prec BMINUS { Eunop (Bminus, e) }

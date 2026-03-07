@@ -83,4 +83,10 @@ fun add t k v =
     ensures bst r
     ensures memt r k v *)
 
-exception ErrorMsg string
+(*@ axiom zero_neutral : forall x: int. x + 0 = x *)
+
+(*@ lemma add_comm : forall x y: int. x + y = y + x *)
+
+fun add1 x y = x + y
+(*@ r = add1 x y
+    ensures r = x + y *)

@@ -32,6 +32,8 @@ let report (b,e) =
   let lc = e.pos_cnum - b.pos_bol + 1 in
   eprintf "File \"%s\", line %d, characters %d-%d:\n" file l fc lc
 
+
+
 let () =
   let c = open_in file in
   let lb = Lexing.from_channel c in
@@ -52,7 +54,10 @@ let () =
         | Some _ -> Printf.printf "Def %s with gospel spec parsed successfully!\n" d.name.id
         | None   -> Printf.printf "Def %s parsed successfully!\n" d.name.id)
       | _ -> ()
-    ) gast
+    ) gast;
+    let pp_new_line fmt () = Format.fprintf fmt "@\n@\n" in
+    Format.(eprintf "%a@." 
+      (pp_print_list ~pp_sep:pp_new_line Pp_gast.pp_gtoplevel) gast)
   with
     | Lexer.Lexing_error s ->
 	report (lexeme_start_p lb, lexeme_end_p lb);

@@ -9,8 +9,10 @@ let first_keyword s =
   with Not_found -> st
 
 let is_floating s =
+  let kw = first_keyword s in
+  Printf.printf "DEBUG is_floating keyword: '%s'\n%!" kw;
   match first_keyword s with
-  | "function" | "predicate" | "axiom"| "type" | "open" -> true
+  | "function" | "predicate" | "axiom" | "lemma" | "type" | "open" -> true
   | _ -> false 
 
 let parse_val_spec s =
@@ -28,6 +30,11 @@ let parse_axiom s =
   try Some (Gospel.Uparser.axiom Gospel.Ulexer.token lb)
   with Gospel.Uparser.Error -> None
 
+let parse_lemma s =
+  let lb = Lexing.from_string s in
+  try Some (Gospel.Uparser.prop Gospel.Ulexer.token lb)
+  with Gospel.Uparser.Error -> None
+
 let parse_floating s =
   match first_keyword s with
   | "function" | "predicate" ->
@@ -38,6 +45,10 @@ let parse_floating s =
     (match parse_axiom s with
       | Some a -> GTgospel_axiom a
       | None -> failwith ("Gospel parse error: " ^ s))
+  | "lemma" ->
+    (match parse_lemma s with
+      | Some l -> GTgospel_lemma l
+      | None -> failwith ("Gospel parse lemma error: " ^ s))
   | _ -> failwith ("Unknown floating gospel annotation: " ^ s)
 
 (* Consecutive specs to be merged *)
