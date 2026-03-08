@@ -3,16 +3,113 @@
     | Leaf -> false
     | Node _ l k' v' r -> (k = k' && v = v') || memt l k v || memt r k v *)
 
+(*@ lemma memt_color :
+    forall l r : tree, k k' : key, v v' : value, c c' : color.
+    memt (Node c l k v r) k' v' -> memt (Node c' l k v r) k' v' *)
+
+(*@ lemma lt_leaf: forall x: key. lt_tree x Leaf *)
+
+(*@ lemma gt_leaf: forall x: key. gt_tree x Leaf *)
+
+(*@ lemma lt_tree_node:
+    forall x y: key, v: value, l r: tree, c: color.
+      lt_tree x l -> lt_tree x r -> y < x -> lt_tree x (Node c l y v r) *)
+
+(*@ lemma gt_tree_node:
+    forall x y: key, v: value, l r: tree, c: color.
+      gt_tree x l -> gt_tree x r -> x < y -> gt_tree x (Node c l y v r) *)
+
+(*@ lemma lt_node_lt:
+    forall x y: key, v: value, l r: tree, c: color.
+      lt_tree x (Node c l y v r) -> y < x *)
+
+(*@ lemma gt_node_gt:
+    forall x y: key, v: value, l r: tree, c: color.
+      gt_tree x (Node c l y v r) -> x < y *)
+
+(*@ lemma lt_left:
+    forall x y: key, v: value, l r: tree, c: color.
+      lt_tree x (Node c l y v r) -> lt_tree x l *)
+
+(*@ lemma lt_right:
+    forall x y: key, v: value, l r: tree, c: color.
+      lt_tree x (Node c l y v r) -> lt_tree x r *)
+
+(*@ lemma gt_left:
+    forall x y: key, v: value, l r: tree, c: color.
+      gt_tree x (Node c l y v r) -> gt_tree x l *)
+
+(*@ lemma gt_right:
+    forall x y: key, v: value, l r: tree, c: color.
+      gt_tree x (Node c l y v r) -> gt_tree x r *)
+
+(*@ lemma lt_tree_not_in:
+    forall x: key, t: tree. lt_tree x t -> forall v: value. not (memt t x v) *)
+
+(*@ lemma lt_tree_trans:
+    forall x y: key. x < y -> forall t: tree. lt_tree x t -> lt_tree y t *)
+
+(*@ lemma gt_tree_not_in:
+    forall x: key, t: tree. gt_tree x t -> forall v: value. not (memt t x v) *)
+
+(*@ lemma gt_tree_trans:
+    forall x y: key. y < x -> forall t: tree. gt_tree x t -> gt_tree y t *)
+
 (*@ predicate bst (t: tree) =
     match t with
     | Leaf -> true
     | Node _ l k _ r -> bst l && bst r && lt_tree k l && gt_tree k r *)
 
-(*@ predicate lt_tree (x: key) (t: tree) =
-    forall k: key. forall v: value. memt t k v -> k < x *)
+(*@ lemma bst_Leaf: bst Leaf *)
 
-(*@ predicate gt_tree (x: key) (t: tree) =
-    forall k: key. forall v: value. memt t k v -> x < k *)
+(*@ lemma bst_left:
+    forall k: key, v: value, l r: tree, c: color.
+      bst (Node c l k v r) -> bst l *)
+
+(*@ lemma bst_right:
+    forall k: key, v: value, l r: tree, c: color.
+      bst (Node c l k v r) -> bst r *)
+
+(*@ lemma bst_color:
+    forall c c': color, k: key, v: value, l r: tree.
+      bst (Node c l k v r) -> bst (Node c' l k v r) *)
+
+(*@ lemma rotate_left:
+    forall kx ky: key, vx vy: value, a b c: tree, c1 c2 c3 c4: color.
+      bst (Node c1 a kx vx (Node c2 b ky vy c)) ->
+      bst (Node c3 (Node c4 a kx vx b) ky vy c) *)
+
+(*@ lemma rotate_right:
+    forall kx ky: key, vx vy: value, a b c: tree, c1 c2 c3 c4: color.
+      bst (Node c3 (Node c4 a kx vx b) ky vy c) ->
+      bst (Node c1 a kx vx (Node c2 b ky vy c)) *)
+
+(*@ predicate is_not_red (t: tree) =
+    match t with
+    | Node Red _ _ _ _ -> false
+    | Leaf -> true
+    | Node Black _ _ _ _ -> true *)
+
+(*@ predicate rbtree (n: int) (t: tree) =
+    match t with
+    | Leaf -> n = 0
+    | Node Red l _ _ r ->
+        rbtree n l && rbtree n r && is_not_red l && is_not_red r
+    | Node Black l _ _ r ->
+        rbtree (n-1) l && rbtree (n-1) r *)
+
+(*@ lemma rbtree_Leaf: rbtree 0 Leaf *)
+
+(*@ lemma rbtree_Node1:
+    forall k: key, v: value. rbtree 0 (Node Red Leaf k v Leaf) *)
+
+(*@ lemma rbtree_left:
+    forall x: key, v: value, l r: tree, c: color.
+      (exists n: int. rbtree n (Node c l x v r)) -> exists n: int. rbtree n l *)
+
+(*@ lemma rbtree_right:
+    forall x: key, v: value, l r: tree, c: color.
+      (exists n: int. rbtree n (Node c l x v r)) -> exists n: int. rbtree n r *)
 
 type key = int
 type value = int
@@ -28,10 +125,28 @@ fun find t k =
     if k = kqt then v
     else if k < kqt then find l k
     else find r k)
-(*@ r = find t k
+(*@ result = find t k
     requires bst t
-    ensures memt t k r
-    variant t *)
+    variant t
+    ensures memt t k result
+    raises Not_found -> forall v: value. not (memt t k v) *)
+
+(*@ predicate almost_rbtree (n: int) (t: tree) =
+    match t with
+    | Leaf -> n = 0
+    | Node Red l _ _ r -> rbtree n l /\\ rbtree n r
+    | Node Black l _ _ r -> rbtree (n-1) l /\\ rbtree (n-1) r *)
+
+(*@ lemma rbtree_almost_rbtree:
+    forall n: int, t: tree. rbtree n t -> almost_rbtree n t *)
+
+(*@ lemma rbtree_almost_rbtree_ex:
+    forall s: tree.
+      (exists n: int. rbtree n s) -> exists n: int. almost_rbtree n s *)
+
+(*@ lemma almost_rbtree_rbtree_black:
+    forall x: key, v: value, l r: tree, n: int.
+      almost_rbtree n (Node Black l x v r) -> rbtree n (Node Black l x v r) *)
 
 fun lbalance l k v r =
   (case l of
@@ -40,9 +155,13 @@ fun lbalance l k v r =
   | (Node Red a kx vx (Node Red b ky vy c)) =>
       Node Red (Node Black a kx vx b) ky vy (Node Black c k v r)
   | _ => Node Black l k v r)
-(*@ r = lbalance l k v rr
-    requires lt_tree k l && gt_tree k rr && bst l && bst rr
-    ensures bst r *)
+(*@ result = lbalance l k v r
+    requires lt_tree k l && gt_tree k r %% bst l %% bst r
+    ensures bst result %%
+      (forall n: int. almost_rbtree n l -> rbtree n r -> rbtree (n+1) result) &&
+      forall k': key, v': value.
+        memt result k' v' <->
+        if k' = k then v' = v else memt l k' v' || memt r k' v' *)
 
 fun rbalance l k v r =
   (case r of
@@ -51,9 +170,13 @@ fun rbalance l k v r =
   | (Node Red b ky vy (Node Red c kz vz d)) =>
       Node Red (Node Black l k v b) ky vy (Node Black c kz vz d)
   | _ => Node Black l k v r)
-(*@ r = rbalance l k v rr
-    requires lt_tree k l && gt_tree k rr && bst l && bst rr
-    ensures bst r *)
+(*@ result = rbalance l k v r
+    requires lt_tree k l && gt_tree k r && bst l && bst r
+    ensures bst result &&
+      (forall n: int. almost_rbtree n r -> rbtree n l -> rbtree (n+1) result) &&
+      forall k': key, v': value.
+        memt result k' v' <->
+        if k' = k then v' = v else memt l k' v' || memt r k' v' *)
 
 fun insert t k v =
   (case t of
@@ -66,11 +189,17 @@ fun insert t k v =
     if k < kqt then lbalance (insert l k v) kqt vqt r
     else if kqt < k then rbalance l kqt vqt (insert r k v)
     else Node Black l kqt v r)
-(*@ r = insert t k v
-    requires bst t
-    ensures bst r
-    ensures memt r k v
-    variant t *)
+(*@ result = insert t k v
+    requires bst t && exists n: int. rbtree n t
+    variant t
+    ensures bst result &&
+      (forall n: int. rbtree n t ->
+        almost_rbtree n result &&
+        (is_not_red t -> rbtree n result)) &&
+      memt result k v &&
+      forall k': key, v': value.
+        memt result k' v' <->
+        if k' = k then v' = v else memt t k' v' *)
 
 exception Absurd
 
@@ -78,15 +207,11 @@ fun add t k v =
   (case insert t k v of
     (Node _ l kqt vqt r) => Node Black l kqt vqt r
   | Leaf => raise Absurd)
-(*@ r = add t k v
+(*@ result = add t k v
     requires bst t
+    requires exists n: int. rbtree n t
     ensures bst r
-    ensures memt r k v *)
-
-(*@ axiom zero_neutral : forall x: int. x + 0 = x *)
-
-(*@ lemma add_comm : forall x y: int. x + y = y + x *)
-
-fun add1 x y = x + y
-(*@ r = add1 x y
-    ensures r = x + y *)
+    ensures exists n: int. rbtree n r
+    ensures memt r k v
+    ensures forall k': key, v': value.
+    memt r k' v' <-> if k' = k then v' = v else memt t k' v' *)

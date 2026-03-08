@@ -32,7 +32,10 @@ let report (b,e) =
   let lc = e.pos_cnum - b.pos_bol + 1 in
   eprintf "File \"%s\", line %d, characters %d-%d:\n" file l fc lc
 
-
+let module_name =
+  Filename.basename file
+  |> Filename.remove_extension
+  |> String.capitalize_ascii
 
 let () =
   let c = open_in file in
@@ -46,7 +49,7 @@ let () =
 
     (* Phase 2 - ast to gast *)
     let gast = Ast2gast.ast_to_gast ast in
-    Printf.printf "GAST phase done, %d toplevel items\n" (List.length gast);
+    (* Printf.printf "GAST phase done, %d toplevel items\n" (List.length gast);
     List.iter (function
       | Gast.GTgospel_func _ -> Printf.printf "Gospel spec parsed successfully!\n"
       | Gast.GTgospel_axiom _ -> Printf.printf "Gospel spec parsed successfully!\n"
@@ -54,10 +57,13 @@ let () =
         | Some _ -> Printf.printf "Def %s with gospel spec parsed successfully!\n" d.name.id
         | None   -> Printf.printf "Def %s parsed successfully!\n" d.name.id)
       | _ -> ()
-    ) gast;
+    ) gast; *)
     let pp_new_line fmt () = Format.fprintf fmt "@\n@\n" in
+    let pp_gtoplevel_indented fmt item = Format.fprintf fmt " %a" Pp_gast.pp_gtoplevel item in
+    Format.eprintf "module %s\n\n" module_name;
     Format.(eprintf "%a@." 
-      (pp_print_list ~pp_sep:pp_new_line Pp_gast.pp_gtoplevel) gast)
+      (pp_print_list ~pp_sep:pp_new_line pp_gtoplevel_indented) gast);
+    Format.eprintf "\nend\n"
   with
     | Lexer.Lexing_error s ->
 	report (lexeme_start_p lb, lexeme_end_p lb);

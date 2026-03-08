@@ -9,8 +9,6 @@ let first_keyword s =
   with Not_found -> st
 
 let is_floating s =
-  let kw = first_keyword s in
-  Printf.printf "DEBUG is_floating keyword: '%s'\n%!" kw;
   match first_keyword s with
   | "function" | "predicate" | "axiom" | "lemma" | "type" | "open" -> true
   | _ -> false 
@@ -48,7 +46,7 @@ let parse_floating s =
   | "lemma" ->
     (match parse_lemma s with
       | Some l -> GTgospel_lemma l
-      | None -> failwith ("Gospel parse lemma error: " ^ s))
+      | None -> failwith ("Gospel parse error: " ^ s))
   | _ -> failwith ("Unknown floating gospel annotation: " ^ s)
 
 (* Consecutive specs to be merged *)

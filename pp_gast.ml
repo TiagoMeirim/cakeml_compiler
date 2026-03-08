@@ -3,7 +3,7 @@ open Gast
 open Gospel
 open Uast
 open Ast
-open Ppxlib
+(* open Ppxlib *)
 
 (*
 type val_spec = {
@@ -39,6 +39,8 @@ let rec pp_qualid fmt (q: qualid) =
 
 let pp_print_coma fmt () = fprintf fmt ", "
 
+let pp_sep_space fmt () = fprintf fmt " "
+
 let rec pp_pty fmt (pty: pty) =
   match pty with
   | PTtyvar id -> fprintf fmt "%a" pp_preid id
@@ -46,7 +48,7 @@ let rec pp_pty fmt (pty: pty) =
       fprintf fmt "%a" pp_qualid q
   | PTtyapp (q, pty_list) ->
       fprintf fmt "%a %a" pp_qualid q
-        (pp_print_list ~pp_sep:pp_print_space pp_pty) pty_list
+        (pp_print_list ~pp_sep:pp_sep_space pp_pty) pty_list
   | PTtuple pty_list ->
       fprintf fmt "(%a)" 
         (pp_print_list ~pp_sep:pp_print_coma pp_pty) pty_list
@@ -82,12 +84,12 @@ let pp_quant fmt (q: quant) =
   | Texists -> fprintf fmt "exists"
   | Tlambda -> fprintf fmt "fun"
 
-let pp_constant fmt (c: constant) =
+let pp_constant fmt (c: Ppxlib.constant) =
   match c with
-  | Pconst_integer (s, _) -> fprintf fmt "%s" s
-  | Pconst_float (s, _) -> fprintf fmt "%s" s
-  | Pconst_char c -> fprintf fmt "'%c'" c
-  | Pconst_string (s, _, _) -> fprintf fmt {|"%s"|} s
+  | Ppxlib.Pconst_integer (s, _) -> fprintf fmt "%s" s
+  | Ppxlib.Pconst_float (s, _) -> fprintf fmt "%s" s
+  | Ppxlib.Pconst_char c -> fprintf fmt "'%c'" c
+  | Ppxlib.Pconst_string (s, _, _) -> fprintf fmt {|"%s"|} s
 
 let rec pp_pattern fmt (p: Uast.pattern) =
   match p.pat_desc with
@@ -96,7 +98,7 @@ let rec pp_pattern fmt (p: Uast.pattern) =
   | Papp (q, []) -> fprintf fmt "%a" pp_qualid q
   | Papp (q, pl) ->
       fprintf fmt "%a %a" pp_qualid q
-        (pp_print_list ~pp_sep:pp_print_space pp_pattern) pl
+        (pp_print_list ~pp_sep:pp_sep_space pp_pattern) pl
   | Prec fl ->
       fprintf fmt "{ %a }"
         (pp_print_list ~pp_sep:pp_print_coma pp_rec_field) fl
@@ -112,6 +114,7 @@ let rec pp_pattern fmt (p: Uast.pattern) =
 and pp_rec_field fmt (q, p) =
   fprintf fmt "%a = %a" pp_qualid q pp_pattern p
 
+(* Operation pre process *)
 let pp_infix_op fmt (op: Preid.t) =
   let s = op.Preid.pid_str in
   let s = if String.length s > 6 && String.sub s 0 6 = "infix " 
@@ -134,10 +137,10 @@ let rec pp_term fmt (t: Uast.term) =
         (match tl with
         | [t1; t2] -> fprintf fmt "%a %s %a" pp_term t1 op_str pp_term t2
         | _ -> fprintf fmt "%s %a" op_str
-                 (pp_print_list ~pp_sep:pp_print_space pp_term) tl)
+                 (pp_print_list ~pp_sep:pp_sep_space pp_term) tl)
     | _ ->
         fprintf fmt "%a %a" pp_qualid q
-          (pp_print_list ~pp_sep:pp_print_space pp_term) tl)
+          (pp_print_list ~pp_sep:pp_sep_space pp_term) tl)
   | Tfield (t, q) ->
       fprintf fmt "%a.%a" pp_term t pp_qualid q
   | Tapply (t1, t2) ->
@@ -181,7 +184,7 @@ and pp_binder fmt (b: Uast.binder) =
   let (id, pty_opt) = b in
   match pty_opt with
   | None -> fprintf fmt "%a" pp_preid id
-  | Some pty -> fprintf fmt "(%a: %a)" pp_preid id pp_pty pty
+  | Some pty -> fprintf fmt "%a: %a" pp_preid id pp_pty pty
 
 and pp_case fmt (p, t) =
   fprintf fmt " | %a -> %a" pp_pattern p pp_term t
@@ -210,6 +213,38 @@ let pp_constructor fmt (c: constructor) =
   | _  -> fprintf fmt " | %s %a" c.cname.id
       (pp_print_list ~pp_sep:pp_print_space pp_typ) c.args
 
+(* Inline gospel spec *)
+let pp_spec_clause keyword fmt terms =
+  List.iter (fun t ->
+    fprintf fmt "\n  %s { %a }" keyword pp_term t
+  ) terms
+
+let pp_xpost fmt (xp: Uast.xpost) =
+  let (_, cases) = xp in
+  List.iter (fun (q, pat_term_opt) ->
+    match pat_term_opt with
+    | None ->
+        fprintf fmt "\n  raises { %a }" pp_qualid q
+    | Some (p, t) ->
+        fprintf fmt "\n  raises { %a %a -> %a }"
+          pp_qualid q pp_pattern p pp_term t
+  ) cases
+
+let pp_val_spec fmt (spec: Uast.val_spec option) =
+  match spec with
+  | None -> ()
+  | Some s ->
+      pp_spec_clause "requires" fmt s.sp_pre;
+      pp_spec_clause "checks" fmt s.sp_checks;
+      pp_spec_clause "variant" fmt s.sp_variant;
+      pp_spec_clause "ensures" fmt s.sp_post;
+      pp_spec_clause "writes" fmt s.sp_writes;
+      pp_spec_clause "consumes" fmt s.sp_consumes;
+      List.iter (pp_xpost fmt) s.sp_xpost;
+      if s.sp_diverge then fprintf fmt "\n  diverges";
+      if s.sp_pure then fprintf fmt "\n  pure"
+
+(* Recursive check *)
 let rec expr_calls_function name expr =
   match expr with
   | Ecall (f, args) ->
@@ -237,6 +272,115 @@ let rec expr_calls_function name expr =
   | Eassign (e1, e2) ->
       expr_calls_function name e1 || expr_calls_function name e2
 
+let pp_op fmt (o: op) =
+  match o with
+  | Bassign -> fprintf fmt "="
+  | Badd    -> fprintf fmt "+"
+  | Bsub    -> fprintf fmt "-"
+  | Bmul    -> fprintf fmt "*"
+  | Bdiv    -> fprintf fmt "/"
+  | Bminus  -> fprintf fmt "-"
+  | Bmod    -> fprintf fmt "mod"
+  | Bandalso -> fprintf fmt "&&"
+  | Borelse  -> fprintf fmt "||"
+  | Bneq    -> fprintf fmt "<>"
+  | Blt     -> fprintf fmt "<"
+  | Bgt     -> fprintf fmt ">"
+  | Ble     -> fprintf fmt "<="
+  | Bge     -> fprintf fmt ">="
+  | Bnot -> fprintf fmt "not"
+
+let rec pp_expr fmt (e: expr) =
+  match e with
+  | Ecst n -> fprintf fmt "%d" n
+  | Ebool b -> fprintf fmt "%b" b
+  | Estring s -> fprintf fmt {|"%s"|} s
+  | Enil -> fprintf fmt "[]"
+  | Evar x -> fprintf fmt "%s" x.id
+  | Etuple el ->
+      fprintf fmt "(%a)"
+        (pp_print_list ~pp_sep:pp_print_coma pp_expr) el
+  | Elist el ->
+      fprintf fmt "[%a]"
+        (pp_print_list ~pp_sep:pp_print_coma pp_expr) el
+  | Econs (e1, e2) ->
+      fprintf fmt "%a :: %a" pp_expr e1 pp_expr e2
+  | Eappend (e1, e2) ->
+      fprintf fmt "%a ++ %a" pp_expr e1 pp_expr e2
+  | Eunop (op, e) ->
+      fprintf fmt "%a %a" pp_op op pp_expr e
+  | Ebinop (op, e1, e2) ->
+      fprintf fmt "%a %a %a" pp_expr e1 pp_op op pp_expr e2
+  | Eref e ->
+      fprintf fmt "ref %a" pp_expr e
+  | Ederef e ->
+      fprintf fmt "!%a" pp_expr e
+  | Eprint e ->
+      fprintf fmt "print %a" pp_expr e
+  | Eraise x ->
+      fprintf fmt "raise %s" x.id
+  | Eif (e1, e2, e3) ->
+      fprintf fmt "if %a then %a else %a"
+        pp_expr e1 pp_expr e2 pp_expr e3
+  | Elet (x, e1, e2) ->
+      fprintf fmt "let %s = %a in\\n  %a" x.id pp_expr e1 pp_expr e2
+  | Ecall (f, args) ->
+      fprintf fmt "%s %a" f.id
+        (pp_print_list ~pp_sep:pp_sep_space pp_expr_arg) args
+  | Econstr (c, args) ->
+      fprintf fmt "%s %a" c.id
+        (pp_print_list ~pp_sep:pp_sep_space pp_expr_arg) args
+  | Eassign (e1, e2) ->
+      fprintf fmt "%a := %a" pp_expr e1 pp_expr e2
+  | Ecase (e, cases) ->
+      fprintf fmt "match %a with\n%a\n  end"
+        pp_expr e
+        (pp_print_list ~pp_sep:pp_print_newline pp_case_clause) cases
+
+and pp_expr_arg fmt (e: expr) =
+  match e with
+  | Econstr (_, _::_)
+  | Ecall (_, _::_)
+  | Eif _
+  | Elet _
+  | Ecase _
+  | Ebinop _
+  | Eunop _
+  | Econs _
+  | Eappend _ ->
+      fprintf fmt "(%a)" pp_expr e
+  | _ ->
+      pp_expr fmt e
+
+and pp_case_clause fmt (p, e) =
+  fprintf fmt "  | %a -> %a" pp_pattern_expr p pp_expr e
+
+and pp_pattern_expr fmt (p: Ast.pattern) =
+  match p with
+  | Pwild -> fprintf fmt "_"
+  | Pvar x -> fprintf fmt "%s" x.id
+  | Pbool b -> fprintf fmt "%b" b
+  | Pcst n -> fprintf fmt "%d" n
+  | Pnil -> fprintf fmt "[]"
+  | Plist pl ->
+      fprintf fmt "[%a]"
+        (pp_print_list ~pp_sep:pp_print_coma pp_pattern_expr) pl
+  | Pcons (p1, p2) ->
+      fprintf fmt "%a :: %a" pp_pattern_expr p1 pp_pattern_expr p2
+  | Ptuple pl ->
+      fprintf fmt "(%a)"
+        (pp_print_list ~pp_sep:pp_print_coma pp_pattern_expr) pl
+  | Pconstr (c, pl) ->
+      fprintf fmt "%s %a" c.id
+        (pp_print_list ~pp_sep:pp_sep_space pp_pattern_expr_arg) pl
+
+and pp_pattern_expr_arg fmt (p: Ast.pattern) =
+  match p with
+  | Ast.Pconstr (_, _::_) ->
+      fprintf fmt "(%a)" pp_pattern_expr p
+  | _ ->
+      pp_pattern_expr fmt p
+
 let pp_gtoplevel fmt (g: gtoplevel) =
   match g with
   | GTexn (x, None) ->
@@ -245,9 +389,13 @@ let pp_gtoplevel fmt (g: gtoplevel) =
       fprintf fmt "exception %s %a" x.id pp_typ t
   | GTdef d ->
     let is_rec = expr_calls_function d.name.id d.body in
-    fprintf fmt "let %s%s = ..."
+    fprintf fmt "let %s%s %a%a \n = %a"
       (if is_rec then "rec " else "")
       d.name.id
+      (pp_print_list ~pp_sep:pp_sep_space
+        (fun fmt id -> fprintf fmt "%s" id.id)) d.formals
+      pp_val_spec d.spec
+       pp_expr d.body
   | GTtype (x, t) ->
       fprintf fmt "type %s = %a" x.id pp_typ t
   | GTdatatype (_, x, cl) ->
@@ -256,14 +404,14 @@ let pp_gtoplevel fmt (g: gtoplevel) =
   | GTgospel_func {fun_name; fun_rec; fun_params; fun_type = None; fun_def; _} ->
       fprintf fmt "predicate %a %a@[%a@]%a"
         pp_preid fun_name pp_rec_flag fun_rec
-        (pp_print_list ~pp_sep:pp_print_space pp_param) fun_params
+        (pp_print_list ~pp_sep:pp_sep_space pp_param) fun_params
         (fun fmt -> function
           | None -> ()
           | Some t -> fprintf fmt " =@\n %a" pp_term t) fun_def
   | GTgospel_func {fun_name; fun_rec; fun_params; fun_type = Some pty; fun_def; _} ->
       fprintf fmt "function %a %a%a : %a%a"
         pp_preid fun_name pp_rec_flag fun_rec
-        (pp_print_list ~pp_sep:pp_print_space pp_param) fun_params
+        (pp_print_list ~pp_sep:pp_sep_space pp_param) fun_params
         pp_pty pty
         (fun fmt -> function
           | None -> ()
