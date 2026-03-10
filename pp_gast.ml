@@ -135,20 +135,25 @@ let rec pp_term fmt (t: Uast.term) =
         let op_str = String.sub op.Preid.pid_str 6
                        (String.length op.Preid.pid_str - 6) in
         (match tl with
-        | [t1; t2] -> fprintf fmt "%a %s %a" pp_term t1 op_str pp_term t2
+        | [t1; t2] -> fprintf fmt "%a %s %a" pp_term_arg t1 op_str pp_term_arg t2
         | _ -> fprintf fmt "%s %a" op_str
-                 (pp_print_list ~pp_sep:pp_sep_space pp_term) tl)
+                 (pp_print_list ~pp_sep:pp_sep_space pp_term_arg) tl)
     | _ ->
         fprintf fmt "%a %a" pp_qualid q
           (pp_print_list ~pp_sep:pp_sep_space pp_term) tl)
   | Tfield (t, q) ->
       fprintf fmt "%a.%a" pp_term t pp_qualid q
   | Tapply (t1, t2) ->
-      fprintf fmt "%a %a" pp_term t1 pp_term t2
+      fprintf fmt "%a %a" pp_term t1 pp_term_arg t2
   | Tinfix (t1, op, t2) ->
       fprintf fmt "%a %a %a" pp_term t1 pp_infix_op op pp_term t2
   | Tbinop (t1, b, t2) ->
-      fprintf fmt "%a %a %a" pp_term t1 pp_binop b pp_term t2
+      begin match b with
+      | Timplies ->
+          fprintf fmt "%a %a %a" pp_term_arg t1 pp_binop b pp_term t2
+      | _ ->
+          fprintf fmt "%a %a %a" pp_term t1 pp_binop b pp_term t2
+      end
   | Tnot t ->
       fprintf fmt "not %a" pp_term t
   | Tif (t1, t2, t3) ->
@@ -180,6 +185,20 @@ let rec pp_term fmt (t: Uast.term) =
   | Told t ->
       fprintf fmt "old %a" pp_term t
 
+and pp_term_arg fmt (t: Uast.term) =
+  match t.term_desc with
+  | Tapply _
+  | Tidapp _
+  | Tbinop _
+  | Tinfix _
+  | Tif _
+  | Tlet _
+  | Tquant _
+  | Tcase _ ->
+      fprintf fmt "(%a)" pp_term t
+  | _ ->
+      pp_term fmt t
+
 and pp_binder fmt (b: Uast.binder) =
   let (id, pty_opt) = b in
   match pty_opt with
@@ -198,7 +217,7 @@ let rec pp_typ fmt (t: typ) =
   | TyName id -> fprintf fmt "%s" id.id
   | TyApp (t, tl) ->
       fprintf fmt "%a %a" pp_typ t
-        (pp_print_list ~pp_sep:pp_print_space pp_typ) tl
+        (pp_print_list ~pp_sep:pp_sep_space pp_typ) tl
   | TyInt n -> fprintf fmt "%d" n
   | TyBool b -> fprintf fmt "%b" b
   | TyTuple tl ->
@@ -211,7 +230,7 @@ let pp_constructor fmt (c: constructor) =
   match c.args with
   | [] -> fprintf fmt " | %s" c.cname.id
   | _  -> fprintf fmt " | %s %a" c.cname.id
-      (pp_print_list ~pp_sep:pp_print_space pp_typ) c.args
+      (pp_print_list ~pp_sep:pp_sep_space pp_typ) c.args
 
 (* Inline gospel spec *)
 let pp_spec_clause keyword fmt terms =

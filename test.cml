@@ -1,3 +1,8 @@
+type key = int
+type value = int
+datatype color = Red | Black
+datatype tree = Leaf | Node color tree (int) (int) tree
+
 (*@ predicate memt (t: tree) (k: key) (v: value) =
     match t with
     | Leaf -> false
@@ -6,6 +11,12 @@
 (*@ lemma memt_color :
     forall l r : tree, k k' : key, v v' : value, c c' : color.
     memt (Node c l k v r) k' v' -> memt (Node c' l k v r) k' v' *)
+
+(*@ predicate lt_tree (x : key) (t : tree) =
+    forall k : key. forall v : value. memt t k v -> k < x *)
+
+(*@ predicate gt_tree (x : key) (t : tree) =
+    forall k : key. forall v : value. memt t k v -> x < k *)
 
 (*@ lemma lt_leaf: forall x: key. lt_tree x Leaf *)
 
@@ -111,11 +122,6 @@
     forall x: key, v: value, l r: tree, c: color.
       (exists n: int. rbtree n (Node c l x v r)) -> exists n: int. rbtree n r *)
 
-type key = int
-type value = int
-datatype color = Red | Black
-datatype tree = Leaf | Node color tree (int) (int) tree
-
 exception Not_found
 
 fun find t k =
@@ -134,8 +140,8 @@ fun find t k =
 (*@ predicate almost_rbtree (n: int) (t: tree) =
     match t with
     | Leaf -> n = 0
-    | Node Red l _ _ r -> rbtree n l /\\ rbtree n r
-    | Node Black l _ _ r -> rbtree (n-1) l /\\ rbtree (n-1) r *)
+    | Node Red l _ _ r -> rbtree n l /\ rbtree n r
+    | Node Black l _ _ r -> rbtree (n-1) l /\ rbtree (n-1) r *)
 
 (*@ lemma rbtree_almost_rbtree:
     forall n: int, t: tree. rbtree n t -> almost_rbtree n t *)
@@ -156,8 +162,8 @@ fun lbalance l k v r =
       Node Red (Node Black a kx vx b) ky vy (Node Black c k v r)
   | _ => Node Black l k v r)
 (*@ result = lbalance l k v r
-    requires lt_tree k l && gt_tree k r %% bst l %% bst r
-    ensures bst result %%
+    requires lt_tree k l && gt_tree k r && bst l && bst r
+    ensures bst result &&
       (forall n: int. almost_rbtree n l -> rbtree n r -> rbtree (n+1) result) &&
       forall k': key, v': value.
         memt result k' v' <->
@@ -201,17 +207,15 @@ fun insert t k v =
         memt result k' v' <->
         if k' = k then v' = v else memt t k' v' *)
 
-exception Absurd
-
 fun add t k v =
   (case insert t k v of
     (Node _ l kqt vqt r) => Node Black l kqt vqt r
-  | Leaf => raise Absurd)
+  | Leaf => absurd)
 (*@ result = add t k v
     requires bst t
     requires exists n: int. rbtree n t
-    ensures bst r
-    ensures exists n: int. rbtree n r
-    ensures memt r k v
+    ensures bst result
+    ensures exists n: int. rbtree n result
+    ensures memt result k v
     ensures forall k': key, v': value.
-    memt r k' v' <-> if k' = k then v' = v else memt t k' v' *)
+    memt result k' v' <-> if k' = k then v' = v else memt t k' v' *)

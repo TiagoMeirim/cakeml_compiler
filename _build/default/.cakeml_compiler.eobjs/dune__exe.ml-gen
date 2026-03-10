@@ -15,6 +15,9 @@ module Compile = Dune__exe__Compile
 (** @canonical Dune__exe.Gast *)
 module Gast = Dune__exe__Gast
 
+(** @canonical Dune__exe.Imports *)
+module Imports = Dune__exe__Imports
+
 (** @canonical Dune__exe.Lexer *)
 module Lexer = Dune__exe__Lexer
 

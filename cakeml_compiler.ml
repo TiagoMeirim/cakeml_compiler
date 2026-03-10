@@ -1,5 +1,6 @@
 open Format
 open Lexing
+open Imports
 
 let usage = "usage: while [options] file.cml"
 
@@ -59,8 +60,11 @@ let () =
       | _ -> ()
     ) gast; *)
     let pp_new_line fmt () = Format.fprintf fmt "@\n@\n" in
-    let pp_gtoplevel_indented fmt item = Format.fprintf fmt " %a" Pp_gast.pp_gtoplevel item in
+    let pp_gtoplevel_indented fmt item = Format.fprintf fmt "  %a" Pp_gast.pp_gtoplevel item in
     Format.eprintf "module %s\n\n" module_name;
+    let imports = collect_imports gast in
+      StringSet.iter ( fun imp -> Format.eprintf "  %s\n" imp ) imports;
+    Format.eprintf "\n";
     Format.(eprintf "%a@." 
       (pp_print_list ~pp_sep:pp_new_line pp_gtoplevel_indented) gast);
     Format.eprintf "\nend\n"
