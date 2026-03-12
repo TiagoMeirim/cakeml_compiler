@@ -1,5 +1,19 @@
 module StringSet = Set.Make(String)
 
+let list_function_imports = [
+  "length",  "use list.Length";
+  "nth",     "use list.Nth";
+  "rev",     "use list.Reverse";
+  "append",  "use list.Append";
+  "map",     "use list.Map";
+  "filter",  "use list.Filter";
+  "foldl",   "use list.FoldLeft";
+  "foldr",   "use list.FoldRight";
+  "mem",     "use list.Mem";
+  "hd",      "use list.HdTl";
+  "tl",      "use list.HdTl";
+]
+
 let rec collect_expr_imports acc (e: Ast.expr) =
   match e with
   | Ast.Ebool _ 
@@ -13,6 +27,18 @@ let rec collect_expr_imports acc (e: Ast.expr) =
       collect_subexpr_imports (StringSet.add "use list.List" acc) e
   | Ast.Eref _ | Ast.Ederef _ | Ast.Eassign _ ->
       collect_subexpr_imports (StringSet.add "use ref.Ref" acc) e
+  | Ast.Eqcall (q, args) ->
+      let acc = match q.modname.id with
+        | "List" ->
+            let acc = StringSet.add "use list.List" acc in
+            (match List.assoc_opt q.field.id list_function_imports with
+            | Some imp -> StringSet.add imp acc
+            | None -> acc)
+        | "Array" -> StringSet.add "use array.Array" acc
+        | "String" -> StringSet.add "use string.String" acc
+        | _ -> acc
+      in
+      collect_subexpr_imports acc (Ast.Eqcall (q, args))
   | _ ->
       collect_subexpr_imports acc e
 
@@ -36,6 +62,8 @@ and collect_subexpr_imports acc (e: Ast.expr) =
       List.fold_left (fun acc (_, e) -> collect_expr_imports acc e) acc cases
   | Ast.Etuple el ->
       List.fold_left collect_expr_imports acc el
+  | Ast.Eqcall (_, args) ->
+      List.fold_left collect_expr_imports acc args
   | _ -> acc
 
 let collect_imports (gast: Gast.gtoplevel list) =

@@ -3,26 +3,6 @@ open Gast
 open Gospel
 open Uast
 open Ast
-(* open Ppxlib *)
-
-(*
-type val_spec = {
-  sp_header : spec_header option;
-  sp_pre : term list;
-  sp_checks : term list;
-  sp_post : term list;
-  sp_xpost : xpost list;
-  sp_writes : term list;
-  sp_consumes : term list;
-  sp_variant : term list;
-  sp_diverge : bool;
-  sp_pure : bool;
-  sp_equiv : string list;
-  sp_text : string;
-  sp_loc : Location.t;
-}
-
-*)
 
 let pp_preid fmt (id: Preid.t) =
   fprintf fmt "%s" id.Preid.pid_str
@@ -111,6 +91,7 @@ let rec pp_pattern fmt (p: Uast.pattern) =
       fprintf fmt "%a | %a" pp_pattern p1 pp_pattern p2
   | Pas (p, id) ->
       fprintf fmt "%a as %a" pp_pattern p pp_preid id
+      
 and pp_rec_field fmt (q, p) =
   fprintf fmt "%a = %a" pp_qualid q pp_pattern p
 
@@ -266,6 +247,7 @@ let pp_val_spec fmt (spec: Uast.val_spec option) =
 (* Recursive check *)
 let rec expr_calls_function name expr =
   match expr with
+  | Eunit -> false
   | Ecall (f, args) ->
       f.id = name || List.exists (expr_calls_function name) args
   | Econstr (_, args) ->
@@ -290,6 +272,10 @@ let rec expr_calls_function name expr =
   | Eraise _ -> false
   | Eassign (e1, e2) ->
       expr_calls_function name e1 || expr_calls_function name e2
+  | Eqcall (q, args) ->
+      q.field.id = name || List.exists (expr_calls_function name) args
+  | Efun (_, e) ->
+      expr_calls_function name e
 
 let pp_op fmt (o: op) =
   match o with
@@ -311,6 +297,7 @@ let pp_op fmt (o: op) =
 
 let rec pp_expr fmt (e: expr) =
   match e with
+  | Eunit -> fprintf fmt "()"
   | Ecst n -> fprintf fmt "%d" n
   | Ebool b -> fprintf fmt "%b" b
   | Estring s -> fprintf fmt {|"%s"|} s
@@ -342,7 +329,7 @@ let rec pp_expr fmt (e: expr) =
       fprintf fmt "if %a then %a else %a"
         pp_expr e1 pp_expr e2 pp_expr e3
   | Elet (x, e1, e2) ->
-      fprintf fmt "let %s = %a in\\n  %a" x.id pp_expr e1 pp_expr e2
+      fprintf fmt "let %s = %a in \n  %a" x.id pp_expr e1 pp_expr e2
   | Ecall (f, args) ->
       fprintf fmt "%s %a" f.id
         (pp_print_list ~pp_sep:pp_sep_space pp_expr_arg) args
@@ -355,6 +342,14 @@ let rec pp_expr fmt (e: expr) =
       fprintf fmt "match %a with\n%a\n  end"
         pp_expr e
         (pp_print_list ~pp_sep:pp_print_newline pp_case_clause) cases
+  | Eqcall (q, args) ->
+      fprintf fmt "%s.%s %a" q.modname.id q.field.id
+      (pp_print_list ~pp_sep:pp_sep_space pp_expr_arg) args
+  | Efun (args, e) ->
+      fprintf fmt "fun %a -> %a"
+      (pp_print_list ~pp_sep:pp_sep_space
+        (fun fmt id -> fprintf fmt "%s" id.id)) args
+      pp_expr e
 
 and pp_expr_arg fmt (e: expr) =
   match e with
@@ -367,6 +362,8 @@ and pp_expr_arg fmt (e: expr) =
   | Eunop _
   | Econs _
   | Eappend _ ->
+      fprintf fmt "(%a)" pp_expr e
+  | Efun _ ->
       fprintf fmt "(%a)" pp_expr e
   | _ ->
       pp_expr fmt e
@@ -392,6 +389,9 @@ and pp_pattern_expr fmt (p: Ast.pattern) =
   | Pconstr (c, pl) ->
       fprintf fmt "%s %a" c.id
         (pp_print_list ~pp_sep:pp_sep_space pp_pattern_expr_arg) pl
+  | Pqconstr (q, pl) ->
+    fprintf fmt "%s.%s %a" q.modname.id q.field.id
+      (pp_print_list ~pp_sep:pp_sep_space pp_pattern_expr_arg) pl
 
 and pp_pattern_expr_arg fmt (p: Ast.pattern) =
   match p with
@@ -407,14 +407,14 @@ let pp_gtoplevel fmt (g: gtoplevel) =
   | GTexn (x, Some t) ->
       fprintf fmt "exception %s %a" x.id pp_typ t
   | GTdef d ->
-    let is_rec = expr_calls_function d.name.id d.body in
-    fprintf fmt "let %s%s %a%a \n = %a"
-      (if is_rec then "rec " else "")
-      d.name.id
-      (pp_print_list ~pp_sep:pp_sep_space
-        (fun fmt id -> fprintf fmt "%s" id.id)) d.formals
-      pp_val_spec d.spec
-       pp_expr d.body
+      let is_rec = expr_calls_function d.name.id d.body in
+      fprintf fmt "let %s%s %a%a \n = %a"
+        (if is_rec then "rec " else "")
+        d.name.id
+        (pp_print_list ~pp_sep:pp_sep_space
+          (fun fmt id -> fprintf fmt "%s" id.id)) d.formals
+        pp_val_spec d.spec
+        pp_expr d.body
   | GTtype (x, t) ->
       fprintf fmt "type %s = %a" x.id pp_typ t
   | GTdatatype (_, x, cl) ->

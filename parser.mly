@@ -18,19 +18,17 @@
 %token PIPE
 %token REF DEREF ASSIGN_REF
 %token CASE OF ARROW
-// %token LCURLY RCURLY
 %token LPAR RPAR
-%token COMMA SEMICOLON ASSIGN
+%token COMMA DOT SEMICOLON ASSIGN
 %token UNDERSCORE
 %token TRUE FALSE
 %token ANDALSO ORELSE
 %token BNEQ BLT BGT BLE BGE
 %token BADD BSUB BMUL BDIV BMINUS BMOD
 %token LSBRACKET RSBRACKET CONS APPEND
+%token LIST
 %token EOF
 %token <string> GOSPEL_COMMENT
-
-// %left SEMICOLON
 
 %left ANDALSO ORELSE
 %left BNEQ BLT BGT BLE BGE
@@ -107,17 +105,20 @@ aexpr:
 | FALSE { Ebool false }
 | s = STRING { Estring s }
 | x = ident { Evar x }
+| LPAR RPAR { Eunit }
 | LPAR e = expr RPAR { e }
 | LPAR es = expr_seq RPAR { Etuple es }
+| LPAR FUN args = ident+ ARROW e = expr RPAR { Efun (args, e) }
 | LSBRACKET RSBRACKET { Enil }
 | LSBRACKET l = list_elements RSBRACKET { Elist l }
+| m = ident DOT x = ident { Evar { id = m.id ^ "." ^ x.id; loc = ($startpos, $endpos) } }
 ;
 
 expr:
 | e = aexpr { e }
 | PRINT e = aexpr { Eprint e }
-| f = ident args = aexpr+ {
-    if Char.uppercase_ascii f.id.[0] = f.id.[0]
+| f = ident args = aexpr+ 
+    { if Char.uppercase_ascii f.id.[0] = f.id.[0]
     then Econstr(f, args)
     else Ecall(f, args) }
 | REF e = expr { Eref e }
@@ -131,6 +132,9 @@ expr:
 | CASE e = expr OF cs = case_clauses { Ecase (e, cs) }
 | e1 = expr CONS e2 = expr { Econs (e1, e2) }
 | e1 = expr APPEND e2 = expr { Eappend (e1, e2) }
+| m = ident DOT f = ident args = aexpr+ 
+    { Eqcall ({ modname = m; field = f; loc = ($startpos, $endpos) }, args) }
+| FUN args = ident+ ARROW e = expr { Efun (args, e) }
 ;
 
 list_elements:
@@ -157,6 +161,7 @@ apattern:
 | LPAR ps = pattern_seq RPAR { Ptuple ps }
 | LSBRACKET RSBRACKET { Pnil }
 | LSBRACKET l = pat_elements RSBRACKET { Plist l }
+| m = ident DOT x = ident ps = apattern+ { Pqconstr ({ modname = m; field = x; loc = ($startpos, $endpos) }, ps) }
 ;
 
 pat_elements:
@@ -167,6 +172,7 @@ pattern:
 | p = apattern { p }
 | cname = ident ps = apattern+ { Pconstr(cname, ps) }
 | p1 = apattern CONS p2 = apattern { Pcons(p1, p2) }
+| m = ident DOT x = ident ps = apattern+ { Pqconstr ({ modname = m; field = x; loc = ($startpos, $endpos) }, ps) }
 ;
 
 pattern_seq:

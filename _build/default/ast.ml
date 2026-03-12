@@ -12,7 +12,14 @@ type ident = { loc: location; id: string; }
 type op = Badd | Bsub | Bmul | Bdiv | Bminus | Bmod | Bassign | Bneq | Blt | Bgt 
 | Ble | Bge | Bandalso | Borelse | Bnot
 
+type qident = {
+  modname : ident; 
+  field      : ident; 
+  loc     : location;
+}
+
 type expr =
+  | Eunit
   | Ecst           of int
   | Evar           of ident
   | Etuple         of expr list
@@ -34,6 +41,8 @@ type expr =
   | Eappend        of expr * expr
   | Estring        of string
   | Eprint         of expr
+  | Eqcall         of qident * expr list
+  | Efun           of ident list * expr
 
 and pattern =
   | Pnil
@@ -45,6 +54,7 @@ and pattern =
   | Pbool   of bool
   | Pconstr of ident * pattern list (* Node l x r *)
   | Ptuple  of pattern list (* (x1, x2) *)
+  | Pqconstr of qident * pattern list
 
 and case_clause = pattern * expr
 

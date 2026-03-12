@@ -21,6 +21,7 @@ type token =
   | NUM of (int)
   | LSBRACKET
   | LPAR
+  | LIST
   | LET
   | IN
   | IF
@@ -32,6 +33,7 @@ type token =
   | EOF
   | END
   | ELSE
+  | DOT
   | DEREF
   | DATATYPE
   | CONS

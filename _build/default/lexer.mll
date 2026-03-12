@@ -71,14 +71,13 @@ rule token = parse
   | '*'         { BMUL }
   | '/'         { BDIV }
   | '%'         { BMOD }
-  (* | '{'         { LCURLY }
-  | '}'         { RCURLY } *)
   | '('         { LPAR }
   | ')'         { RPAR }
   | '='         { ASSIGN }
   | '|'         { PIPE }
   | '_'         { UNDERSCORE }
   | ','         { COMMA }
+  | '.'         { DOT }
   | ';'         { SEMICOLON }
   | eof         { EOF }
   | _ as c      { raise (Lexing_error

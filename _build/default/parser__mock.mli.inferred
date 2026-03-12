@@ -18,6 +18,7 @@ type token =
   | NUM of int
   | LSBRACKET
   | LPAR
+  | LIST
   | LET
   | IN
   | IF
@@ -29,6 +30,7 @@ type token =
   | EOF
   | END
   | ELSE
+  | DOT
   | DEREF
   | DATATYPE
   | CONS
@@ -60,6 +62,7 @@ val xv_pattern : Ast.pattern
 val xv_pat_elements : Ast.pattern list
 val xv_option_SEMICOLON_ : unit option
 val xv_op : Ast.op
+val xv_nonempty_list_ident_ : Ast.ident list
 val xv_nonempty_list_apattern_ : Ast.pattern list
 val xv_nonempty_list_aexpr_ : Ast.expr list
 val xv_more_patterns : Ast.pattern list
