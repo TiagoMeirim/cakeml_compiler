@@ -85,10 +85,11 @@ rule token = parse
 
 and read_gospel_comment = parse
   | "*)"        { () }
-  | eof         { raise (Lexing_error "Unterminated comment") }
+  | eof         { raise (Lexing_error "Unterminated gospel specification") }
   | _ as c      { Buffer.add_char buf c; read_gospel_comment lexbuf }
 
 and read_comment = parse
-  | "*)"        { () }
-  | eof         { raise (Lexing_error "Unterminated comment") }
-  | _           { read_comment lexbuf }
+| "*)"          { () }
+| "(*"          { read_comment lexbuf; read_comment lexbuf }
+| eof           { raise (Lexing_error "Unterminated comment") }
+| _             { read_comment lexbuf }

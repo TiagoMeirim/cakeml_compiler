@@ -1,221 +1,216 @@
-type key = int
-type value = int
-datatype color = Red | Black
-datatype tree = Leaf | Node color tree (int) (int) tree
+type elt = int
+datatype tree = T elt (list tree)
+datatype raw_heap = E | H tree
 
-(*@ predicate memt (t: tree) (k: key) (v: value) =
-    match t with
-    | Leaf -> false
-    | Node _ l k' v' r -> (k = k' && v = v') || memt l k v || memt r k v *)
+(*@ function size_heap (h: raw_heap) : int = match h with
+    | E -> 0
+    | H t -> size_tree t *)
 
-(*@ lemma memt_color :
-    forall l r : tree, k k' : key, v v' : value, c c' : color.
-    memt (Node c l k v r) k' v' -> memt (Node c' l k v r) k' v' *)
+(*@ function size_tree (t: tree) : int = match t with
+    | T _ l -> 1 + size_list l *)
 
-(*@ predicate lt_tree (x : key) (t : tree) =
-    forall k : key. forall v : value. memt t k v -> k < x *)
+(*@ function size_list (l: list tree) : int = match l with
+    | Nil -> 0
+    | Cons t l -> size_tree t + size_list l *)
 
-(*@ predicate gt_tree (x : key) (t : tree) =
-    forall k : key. forall v : value. memt t k v -> x < k *)
+(*@ let rec lemma size_nonneg (h: raw_heap)
+    ensures { size_heap h >= 0 }
+    variant { h }
+  = match h with
+    | E -> ()
+    | H t -> size_tree_nonneg t
+    end
+  with lemma size_tree_nonneg (t: tree)
+    ensures { size_tree t >= 0 }
+    variant { t }
+  = match t with T _ l -> size_list_nonneg l end
+  with lemma size_list_nonneg (l: list tree)
+    ensures { size_list l >= 0 }
+    variant { l }
+  = match l with
+    | Nil -> ()
+    | Cons t r ->
+        size_tree_nonneg t; size_list_nonneg r
+    end *)
 
-(*@ lemma lt_leaf: forall x: key. lt_tree x Leaf *)
+(*@ let lemma size_empty (h: raw_heap)
+    ensures { size_heap h = 0 <-> h = E }
+  = match h with
+    | E -> ()
+    | H t -> size_tree_nonneg t
+    end *)
 
-(*@ lemma gt_leaf: forall x: key. gt_tree x Leaf *)
+(*@ function occ_heap (x: elt) (h: raw_heap) : int = match h with
+    | E -> 0
+    | H t -> occ_tree x t *)
 
-(*@ lemma lt_tree_node:
-    forall x y: key, v: value, l r: tree, c: color.
-      lt_tree x l -> lt_tree x r -> y < x -> lt_tree x (Node c l y v r) *)
+(*@ function occ_tree (x: elt) (t: tree) : int = match t with
+    | T e l -> (if x = e then 1 else 0) + occ_list x l *)
 
-(*@ lemma gt_tree_node:
-    forall x y: key, v: value, l r: tree, c: color.
-      gt_tree x l -> gt_tree x r -> x < y -> gt_tree x (Node c l y v r) *)
+(*@ function occ_list (x: elt) (l: list tree) : int = match l with
+    | Nil -> 0
+    | Cons t r -> occ_tree x t + occ_list x r *)
 
-(*@ lemma lt_node_lt:
-    forall x y: key, v: value, l r: tree, c: color.
-      lt_tree x (Node c l y v r) -> y < x *)
+(*@ let rec lemma occ_nonneg (x: elt) (h: raw_heap)
+    ensures { occ_heap x h >= 0 }
+    variant { h }
+  = match h with
+    | E -> ()
+    | H t -> occ_tree_nonneg x t
+    end
+  with lemma occ_tree_nonneg (x: elt) (t: tree)
+    ensures { occ_tree x t >= 0 }
+    variant { t }
+  = match t with T _ l -> occ_list_nonneg x l end
+  with lemma occ_list_nonneg (x: elt) (l: list tree)
+    ensures { occ_list x l >= 0 }
+    variant { l }
+  = match l with
+    | Nil -> ()
+    | Cons t r ->
+        occ_tree_nonneg x t; occ_list_nonneg x r
+    end *)
 
-(*@ lemma gt_node_gt:
-    forall x y: key, v: value, l r: tree, c: color.
-      gt_tree x (Node c l y v r) -> x < y *)
+(*@ predicate mem (x: elt) (h: raw_heap) =
+    0 < occ_heap x h *)
 
-(*@ lemma lt_left:
-    forall x y: key, v: value, l r: tree, c: color.
-      lt_tree x (Node c l y v r) -> lt_tree x l *)
+(*@ predicate mem_tree (x: elt) (t: tree) =
+    0 < occ_tree x t *)
 
-(*@ lemma lt_right:
-    forall x y: key, v: value, l r: tree, c: color.
-      lt_tree x (Node c l y v r) -> lt_tree x r *)
+(*@ predicate mem_list (x: elt) (l: list tree) =
+    0 < occ_list x l *)
 
-(*@ lemma gt_left:
-    forall x y: key, v: value, l r: tree, c: color.
-      gt_tree x (Node c l y v r) -> gt_tree x l *)
+(*@ predicate le_tree (e: elt) (t: tree) = match t with
+    | T x _ -> e <= x *)
 
-(*@ lemma gt_right:
-    forall x y: key, v: value, l r: tree, c: color.
-      gt_tree x (Node c l y v r) -> gt_tree x r *)
+(*@ predicate le_root (e: elt) (h: raw_heap) = match h with
+    | E -> true
+    | H t -> le_tree e t *)
 
-(*@ lemma lt_tree_not_in:
-    forall x: key, t: tree. lt_tree x t -> forall v: value. not (memt t x v) *)
+(*@ lemma le_root_trans:
+    forall x y h. x <= y -> le_root y h -> le_root x h *)
 
-(*@ lemma lt_tree_trans:
-    forall x y: key. x < y -> forall t: tree. lt_tree x t -> lt_tree y t *)
+(*@ predicate le_roots (e: elt) (l: list tree) = match l with
+    | Nil -> true
+    | Cons t r -> le_tree e t /\ le_roots e r *)
 
-(*@ lemma gt_tree_not_in:
-    forall x: key, t: tree. gt_tree x t -> forall v: value. not (memt t x v) *)
+(*@ lemma le_roots_trans:
+    forall x y l. x <= y -> le_roots y l -> le_roots x l *)
 
-(*@ lemma gt_tree_trans:
-    forall x y: key. y < x -> forall t: tree. gt_tree x t -> gt_tree y t *)
+(*@ predicate heap (h: raw_heap) = match h with
+    | E -> true
+    | H t -> heap_tree t *)
 
-(*@ predicate bst (t: tree) =
-    match t with
-    | Leaf -> true
-    | Node _ l k _ r -> bst l && bst r && lt_tree k l && gt_tree k r *)
+(*@ predicate heap_tree (t: tree) = match t with
+    | T x l -> le_roots x l /\ heap_list l *)
 
-(*@ lemma bst_Leaf: bst Leaf *)
+(*@ predicate heap_list (l: list tree) = match l with
+    | Nil -> true
+    | Cons t r -> heap_tree t /\ heap_list r *)
 
-(*@ lemma bst_left:
-    forall k: key, v: value, l r: tree, c: color.
-      bst (Node c l k v r) -> bst l *)
+(*@ let rec lemma heap_mem (h: raw_heap)
+    requires { heap h }
+    variant { h }
+    ensures { forall x. le_root x h -> forall y. mem y h -> x <= y }
+  = match h with
+    | E -> ()
+    | H t -> heap_mem_tree t
+    end
+  with lemma heap_mem_tree (t: tree)
+    requires { heap_tree t }
+    variant { t }
+    ensures { forall x. le_tree x t -> forall y. mem_tree y t -> x <= y }
+  = match t with T _ l -> heap_mem_list l end
+  with lemma heap_mem_list (l: list tree)
+    requires { heap_list l }
+    variant { l }
+    ensures { forall x. le_roots x l -> forall y. mem_list y l -> x <= y }
+  = match l with
+    | Nil -> ()
+    | Cons t r ->
+        heap_mem_tree t;
+        heap_mem_list r
+    end *)
 
-(*@ lemma bst_right:
-    forall k: key, v: value, l r: tree, c: color.
-      bst (Node c l k v r) -> bst r *)
+(*@ predicate is_minimum_tree (x: elt) (t: tree) =
+    mem_tree x t /\ forall e. mem_tree e t -> x <= e *)
 
-(*@ lemma bst_color:
-    forall c c': color, k: key, v: value, l r: tree.
-      bst (Node c l k v r) -> bst (Node c' l k v r) *)
+(*@ predicate is_minimum (x: elt) (h: raw_heap) =
+    mem x h /\ forall e. mem e h -> x <= e *)
 
-(*@ lemma rotate_left:
-    forall kx ky: key, vx vy: value, a b c: tree, c1 c2 c3 c4: color.
-      bst (Node c1 a kx vx (Node c2 b ky vy c)) ->
-      bst (Node c3 (Node c4 a kx vx b) ky vy c) *)
+(*@ function minimum_tree (t: tree) : elt *)
+(*@ axiom minimum_tree_def:
+    forall x l. minimum_tree (T x l) = x *)
 
-(*@ lemma rotate_right:
-    forall kx ky: key, vx vy: value, a b c: tree, c1 c2 c3 c4: color.
-      bst (Node c3 (Node c4 a kx vx b) ky vy c) ->
-      bst (Node c1 a kx vx (Node c2 b ky vy c)) *)
+(*@ function minimum (h: raw_heap) : elt *)
+(*@ axiom minimum_def:
+    forall t. minimum (H t) = minimum_tree t *)
 
-(*@ predicate is_not_red (t: tree) =
-    match t with
-    | Node Red _ _ _ _ -> false
-    | Leaf -> true
-    | Node Black _ _ _ _ -> true *)
+(*@ let lemma root_is_minimum (h: raw_heap)
+    requires { 0 < size_heap h }
+    requires { heap h }
+    ensures { is_minimum (minimum h) h }
+  = match h with
+    | E -> ()
+    | H (T e l) -> occ_list_nonneg e l
+    end *)
 
-(*@ predicate rbtree (n: int) (t: tree) =
-    match t with
-    | Leaf -> n = 0
-    | Node Red l _ _ r ->
-        rbtree n l && rbtree n r && is_not_red l && is_not_red r
-    | Node Black l _ _ r ->
-        rbtree (n-1) l && rbtree (n-1) r *)
+fun is_empty hh =
+  (case hh of
+    E => true
+  | _ => false)
+(*@ b = is_empty hh
+    ensures b <-> size_heap hh = 0 *)
 
-(*@ lemma rbtree_Leaf: rbtree 0 Leaf *)
+exception Empty
 
-(*@ lemma rbtree_Node1:
-    forall k: key, v: value. rbtree 0 (Node Red Leaf k v Leaf) *)
+fun find_min hh =
+  (case hh of
+    E => raise Empty
+  | H (T x _) => x)
+(*@ r = find_min hh
+    requires 0 < size_heap hh
+    ensures r = minimum hh *)
 
-(*@ lemma rbtree_left:
-    forall x: key, v: value, l r: tree, c: color.
-      (exists n: int. rbtree n (Node c l x v r)) -> exists n: int. rbtree n l *)
+fun merge h1 h2 =
+  (case (h1, h2) of
+    (E, h) => h
+  | (h, E) => h
+  | (H (T x1 l1), H (T x2 l2)) =>
+      if x1 <= x2 then H (T x1 ((T x2 l2) :: l1))
+      else H (T x2 ((T x1 l1) :: l2)))
+(*@ result = merge h1 h2
+    ensures size_heap result = size_heap h1 + size_heap h2
+    ensures forall x. occ_heap x result = occ_heap x h1 + occ_heap x h2 *)
 
-(*@ lemma rbtree_right:
-    forall x: key, v: value, l r: tree, c: color.
-      (exists n: int. rbtree n (Node c l x v r)) -> exists n: int. rbtree n r *)
+fun insert x hh = merge (H (T x [])) hh
+(*@ result = insert x hh
+    ensures size_heap result = size_heap hh + 1
+    ensures occ_heap x result = occ_heap x hh + 1
+    ensures forall y. x <> y -> occ_heap y result = occ_heap y hh *)
 
-exception Not_found
-
-fun find t k =
-  (case t of
-    Leaf => raise Not_found
-  | (Node _ l kqt v r) =>
-    if k = kqt then v
-    else if k < kqt then find l k
-    else find r k)
-(*@ result = find t k
-    requires bst t
-    variant t
-    ensures memt t k result
-    raises Not_found -> forall v: value. not (memt t k v) *)
-
-(*@ predicate almost_rbtree (n: int) (t: tree) =
-    match t with
-    | Leaf -> n = 0
-    | Node Red l _ _ r -> rbtree n l /\ rbtree n r
-    | Node Black l _ _ r -> rbtree (n-1) l /\ rbtree (n-1) r *)
-
-(*@ lemma rbtree_almost_rbtree:
-    forall n: int, t: tree. rbtree n t -> almost_rbtree n t *)
-
-(*@ lemma rbtree_almost_rbtree_ex:
-    forall s: tree.
-      (exists n: int. rbtree n s) -> exists n: int. almost_rbtree n s *)
-
-(*@ lemma almost_rbtree_rbtree_black:
-    forall x: key, v: value, l r: tree, n: int.
-      almost_rbtree n (Node Black l x v r) -> rbtree n (Node Black l x v r) *)
-
-fun lbalance l k v r =
+fun merge_pairs l =
   (case l of
-    (Node Red (Node Red a kx vx b) ky vy c) =>
-      Node Red (Node Black a kx vx b) ky vy (Node Black c k v r)
-  | (Node Red a kx vx (Node Red b ky vy c)) =>
-      Node Red (Node Black a kx vx b) ky vy (Node Black c k v r)
-  | _ => Node Black l k v r)
-(*@ result = lbalance l k v r
-    requires lt_tree k l && gt_tree k r && bst l && bst r
-    ensures bst result &&
-      (forall n: int. almost_rbtree n l -> rbtree n r -> rbtree (n+1) result) &&
-      forall k': key, v': value.
-        memt result k' v' <->
-        if k' = k then v' = v else memt l k' v' || memt r k' v' *)
+    [] => E
+  | t :: [] => H t
+  | t1 :: t2 :: r =>
+      let val h1 = H t1 in
+      let val h2 = H t2 in
+      merge (merge h1 h2) (merge_pairs r)
+      end
+      end)
+(*@ result = merge_pairs l
+    requires heap_list l
+    variant List.length l
+    ensures size_heap result = size_list l
+    ensures forall x. occ_heap x result = occ_list x l *)
 
-fun rbalance l k v r =
-  (case r of
-    (Node Red (Node Red b ky vy c) kz vz d) =>
-      Node Red (Node Black l k v b) ky vy (Node Black c kz vz d)
-  | (Node Red b ky vy (Node Red c kz vz d)) =>
-      Node Red (Node Black l k v b) ky vy (Node Black c kz vz d)
-  | _ => Node Black l k v r)
-(*@ result = rbalance l k v r
-    requires lt_tree k l && gt_tree k r && bst l && bst r
-    ensures bst result &&
-      (forall n: int. almost_rbtree n r -> rbtree n l -> rbtree (n+1) result) &&
-      forall k': key, v': value.
-        memt result k' v' <->
-        if k' = k then v' = v else memt l k' v' || memt r k' v' *)
-
-fun insert t k v =
-  (case t of
-    Leaf => Node Red Leaf k v Leaf
-  | (Node Red l kqt vqt r) =>
-    if k < kqt then Node Red (insert l k v) kqt vqt r
-    else if kqt < k then Node Red l kqt vqt (insert r k v)
-    else Node Red l kqt v r
-  | (Node Black l kqt vqt r) =>
-    if k < kqt then lbalance (insert l k v) kqt vqt r
-    else if kqt < k then rbalance l kqt vqt (insert r k v)
-    else Node Black l kqt v r)
-(*@ result = insert t k v
-    requires bst t && exists n: int. rbtree n t
-    variant t
-    ensures bst result &&
-      (forall n: int. rbtree n t ->
-        almost_rbtree n result &&
-        (is_not_red t -> rbtree n result)) &&
-      memt result k v &&
-      forall k': key, v': value.
-        memt result k' v' <->
-        if k' = k then v' = v else memt t k' v' *)
-
-fun add t k v =
-  (case insert t k v of
-    (Node _ l kqt vqt r) => Node Black l kqt vqt r
-  | Leaf => absurd)
-(*@ result = add t k v
-    requires bst t
-    requires exists n: int. rbtree n t
-    ensures bst result
-    ensures exists n: int. rbtree n result
-    ensures memt result k v
-    ensures forall k': key, v': value.
-    memt result k' v' <-> if k' = k then v' = v else memt t k' v' *)
+fun delete_min hh =
+  (case hh of
+    E => raise Empty
+  | H (T _ l) => merge_pairs l)
+(*@ result = delete_min hh
+    requires 0 < size_heap hh
+    ensures occ_heap (minimum hh) result = occ_heap (minimum hh) hh - 1
+    ensures forall y. y <> minimum hh -> occ_heap y result = occ_heap y hh
+    ensures size_heap result = size_heap hh - 1 *)

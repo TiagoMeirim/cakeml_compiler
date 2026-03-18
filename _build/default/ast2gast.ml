@@ -10,7 +10,7 @@ let first_keyword s =
 
 let is_floating s =
   match first_keyword s with
-  | "function" | "predicate" | "axiom" | "lemma" | "type" | "open" -> true
+  | "function" | "predicate" | "axiom" | "lemma" | "type" | "open" | "let" -> true
   | _ -> false 
 
 let parse_val_spec s =
@@ -47,6 +47,8 @@ let parse_floating s =
     (match parse_lemma s with
       | Some l -> GTgospel_lemma l
       | None -> failwith ("Gospel parse error: " ^ s))
+  | "let" | "open" | "type" ->
+      GTgospel_raw s
   | _ -> failwith ("Unknown floating gospel annotation: " ^ s)
 
 (* Consecutive specs to be merged *)
@@ -86,5 +88,6 @@ let rec group items =
   | Texn (x, t) :: rest -> GTexn (x, t) :: group rest
   | Tdatatype (ty, x, c) :: rest -> GTdatatype (ty, x, c) :: group rest
   | Ttype (x, c) :: rest -> GTtype (x, c) :: group rest
+  | Tval (x, c) :: rest -> GTval (x, c) :: group rest
   
 let ast_to_gast items = group items

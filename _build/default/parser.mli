@@ -21,7 +21,6 @@ type token =
   | NUM of (int)
   | LSBRACKET
   | LPAR
-  | LIST
   | LET
   | IN
   | IF

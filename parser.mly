@@ -26,7 +26,6 @@
 %token BNEQ BLT BGT BLE BGE
 %token BADD BSUB BMUL BDIV BMINUS BMOD
 %token LSBRACKET RSBRACKET CONS APPEND
-%token LIST
 %token EOF
 %token <string> GOSPEL_COMMENT
 
@@ -58,6 +57,8 @@ toplevel:
     { Tdatatype (ty, x, c) }
 | TYPE x = ident ASSIGN c = typ option(SEMICOLON)
     { Ttype (x, c) }
+| VAL x = ident ASSIGN c = atyp option(SEMICOLON)
+    { Tval (x, c) }
 | d = def option(SEMICOLON)
     { Tdef d }
 | s = GOSPEL_COMMENT 
@@ -171,7 +172,7 @@ pat_elements:
 pattern:
 | p = apattern { p }
 | cname = ident ps = apattern+ { Pconstr(cname, ps) }
-| p1 = apattern CONS p2 = apattern { Pcons(p1, p2) }
+| p1 = apattern CONS p2 = pattern { Pcons(p1, p2) }
 | m = ident DOT x = ident ps = apattern+ { Pqconstr ({ modname = m; field = x; loc = ($startpos, $endpos) }, ps) }
 ;
 

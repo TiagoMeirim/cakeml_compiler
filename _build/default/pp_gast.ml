@@ -3,26 +3,6 @@ open Gast
 open Gospel
 open Uast
 open Ast
-(* open Ppxlib *)
-
-(*
-type val_spec = {
-  sp_header : spec_header option;
-  sp_pre : term list;
-  sp_checks : term list;
-  sp_post : term list;
-  sp_xpost : xpost list;
-  sp_writes : term list;
-  sp_consumes : term list;
-  sp_variant : term list;
-  sp_diverge : bool;
-  sp_pure : bool;
-  sp_equiv : string list;
-  sp_text : string;
-  sp_loc : Location.t;
-}
-
-*)
 
 let pp_preid fmt (id: Preid.t) =
   fprintf fmt "%s" id.Preid.pid_str
@@ -233,6 +213,17 @@ let pp_constructor fmt (c: constructor) =
   | _  -> fprintf fmt " | %s %a" c.cname.id
       (pp_print_list ~pp_sep:pp_sep_space pp_typ) c.args
 
+let pp_constructors fmt (cl: constructor list) =
+  match cl with
+  | [] -> ()
+  | [c] ->
+      (match c.args with
+      | [] -> fprintf fmt "%s" c.cname.id
+      | _  -> fprintf fmt "%s %a" c.cname.id
+                (pp_print_list ~pp_sep:pp_sep_space pp_typ) c.args)
+  | _ ->
+      pp_print_list ~pp_sep:pp_print_newline pp_constructor fmt cl
+
 (* Inline gospel spec *)
 let pp_spec_clause keyword fmt terms =
   List.iter (fun t ->
@@ -344,7 +335,10 @@ let rec pp_expr fmt (e: expr) =
   | Eprint e ->
       fprintf fmt "print %a" pp_expr e
   | Eraise x ->
-      fprintf fmt "raise %s" x.id
+      if(x.id = "Absurd") then
+        fprintf fmt "absurd"
+      else
+        fprintf fmt "raise %s" x.id
   | Eif (e1, e2, e3) ->
       fprintf fmt "if %a then %a else %a"
         pp_expr e1 pp_expr e2 pp_expr e3
@@ -423,7 +417,8 @@ and pp_pattern_expr_arg fmt (p: Ast.pattern) =
 let pp_gtoplevel fmt (g: gtoplevel) =
   match g with
   | GTexn (x, None) ->
-      fprintf fmt "exception %s" x.id
+      if(x.id <> "Absurd") then
+        fprintf fmt "exception %s" x.id
   | GTexn (x, Some t) ->
       fprintf fmt "exception %s %a" x.id pp_typ t
   | GTdef d ->
@@ -438,8 +433,12 @@ let pp_gtoplevel fmt (g: gtoplevel) =
   | GTtype (x, t) ->
       fprintf fmt "type %s = %a" x.id pp_typ t
   | GTdatatype (_, x, cl) ->
-      fprintf fmt "type %s =\n%a" x.id
-        (pp_print_list ~pp_sep:pp_print_newline pp_constructor) cl
+      (match cl with
+      | [_] -> fprintf fmt "type %s = %a" x.id pp_constructors cl
+      | _   -> fprintf fmt "type %s =\n%a" x.id
+        (pp_print_list ~pp_sep:pp_print_newline pp_constructor) cl)
+  | GTval (x, t) ->
+      ()
   | GTgospel_func {fun_name; fun_rec; fun_params; fun_type = None; fun_def; _} ->
       fprintf fmt "predicate %a %a@[%a@]%a"
         pp_preid fun_name pp_rec_flag fun_rec
@@ -455,6 +454,8 @@ let pp_gtoplevel fmt (g: gtoplevel) =
         (fun fmt -> function
           | None -> ()
           | Some t -> fprintf fmt " =@\n %a" pp_term t) fun_def
+  | GTgospel_raw s ->
+      fprintf fmt "%s" s
   | GTgospel_axiom {ax_name; ax_term; _} ->
       fprintf fmt "axiom %a : %a" pp_preid ax_name pp_term ax_term
   | GTgospel_lemma {prop_name; prop_term; _} ->

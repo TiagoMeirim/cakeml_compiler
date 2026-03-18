@@ -84,6 +84,7 @@ type toplevel =
 | Tdef         of def
 | Tdatatype    of string list * ident * constructor list
 | Ttype        of ident * typ
+| Tval         of ident * typ
 | Tgospel_spec of string
 
 type file = toplevel list
