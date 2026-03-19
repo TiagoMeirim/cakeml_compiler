@@ -267,9 +267,9 @@ let rec expr_calls_function name expr =
       expr_calls_function name e1 ||
       expr_calls_function name e2 ||
       expr_calls_function name e3
-  | Elet (_, e1, e2) ->
-      expr_calls_function name e1 ||
-      expr_calls_function name e2
+  | Elet (x, e1, e2) ->
+    expr_calls_function name e1 ||
+    (x.id <> name && expr_calls_function name e2)
   | Ecase (e, cases) ->
       expr_calls_function name e ||
       List.exists (fun (_, e) -> expr_calls_function name e) cases
@@ -285,8 +285,10 @@ let rec expr_calls_function name expr =
       expr_calls_function name e1 || expr_calls_function name e2
   | Eqcall (q, args) ->
       q.field.id = name || List.exists (expr_calls_function name) args
-  | Efun (_, e) ->
-      expr_calls_function name e
+  | Efun (args, e) ->
+      if List.exists (fun arg -> arg.id = name) args
+      then false
+      else expr_calls_function name e
 
 let pp_op fmt (o: op) =
   match o with

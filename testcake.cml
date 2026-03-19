@@ -134,3 +134,14 @@ fun mult_list l n = let val l1 = l in
   (case l1 of
     [] => []
   | h :: t => (n1 * h) :: (mult_list t n1)) end end
+
+
+fun foo x =
+  let val foo = x + 1 in
+    foo + 1  (* this foo refers to the let binding, not the function *)
+  end
+
+fun foo x =
+  let val bar = (fun foo => foo + 1) in
+    bar x
+  end
