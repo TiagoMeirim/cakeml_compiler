@@ -437,8 +437,6 @@ let pp_gtoplevel fmt (g: gtoplevel) =
       | [_] -> fprintf fmt "type %s = %a" x.id pp_constructors cl
       | _   -> fprintf fmt "type %s =\n%a" x.id
         (pp_print_list ~pp_sep:pp_print_newline pp_constructor) cl)
-  | GTval (x, t) ->
-      ()
   | GTgospel_func {fun_name; fun_rec; fun_params; fun_type = None; fun_def; _} ->
       fprintf fmt "predicate %a %a@[%a@]%a"
         pp_preid fun_name pp_rec_flag fun_rec

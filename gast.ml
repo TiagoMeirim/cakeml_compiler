@@ -21,7 +21,6 @@ type gtoplevel =
 | GTdef          of gdef
 | GTdatatype     of string list * ident * constructor list
 | GTtype         of ident * typ
-| GTval          of ident * typ
 | GTgospel_func  of Gospel.Uast.function_
 | GTgospel_axiom of Gospel.Uast.axiom
 | GTgospel_lemma of Gospel.Uast.prop

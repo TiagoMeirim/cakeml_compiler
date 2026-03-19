@@ -57,8 +57,6 @@ toplevel:
     { Tdatatype (ty, x, c) }
 | TYPE x = ident ASSIGN c = typ option(SEMICOLON)
     { Ttype (x, c) }
-| VAL x = ident ASSIGN c = atyp option(SEMICOLON)
-    { Tval (x, c) }
 | d = def option(SEMICOLON)
     { Tdef d }
 | s = GOSPEL_COMMENT 

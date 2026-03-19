@@ -88,6 +88,5 @@ let rec group items =
   | Texn (x, t) :: rest -> GTexn (x, t) :: group rest
   | Tdatatype (ty, x, c) :: rest -> GTdatatype (ty, x, c) :: group rest
   | Ttype (x, c) :: rest -> GTtype (x, c) :: group rest
-  | Tval (x, c) :: rest -> GTval (x, c) :: group rest
   
 let ast_to_gast items = group items
