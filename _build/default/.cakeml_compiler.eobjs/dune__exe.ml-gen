@@ -29,6 +29,3 @@ module Pp_gast = Dune__exe__Pp_gast
 
 (** @canonical Dune__exe.Typing *)
 module Typing = Dune__exe__Typing
-
-(** @canonical Dune__exe.X86_64 *)
-module X86_64 = Dune__exe__X86_64

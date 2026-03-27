@@ -1,4 +1,4 @@
-# A compiler for the Cakeml language
+# A translator from the Cakeml language to Whyml language
 
 ## Usage
 
