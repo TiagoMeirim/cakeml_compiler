@@ -131,9 +131,9 @@ let rec pp_term fmt (t: Uast.term) =
   | Tbinop (t1, b, t2) ->
       begin match b with
       | Timplies ->
-          fprintf fmt "%a %a %a" pp_term_arg t1 pp_binop b pp_term t2
+            fprintf fmt "%a %a %a" pp_term_arg t1 pp_binop b pp_term_arg t2
       | _ ->
-          fprintf fmt "%a %a %a" pp_term t1 pp_binop b pp_term t2
+          fprintf fmt "%a %a %a" pp_term_arg t1 pp_binop b pp_term_arg t2
       end
   | Tnot t ->
       fprintf fmt "not %a" pp_term t
@@ -306,7 +306,7 @@ let pp_op fmt (o: op) =
   | Bgt     -> fprintf fmt ">"
   | Ble     -> fprintf fmt "<="
   | Bge     -> fprintf fmt ">="
-  | Bnot -> fprintf fmt "not"
+  | Bnot    -> fprintf fmt "not"
 
 let rec pp_expr fmt (e: expr) =
   match e with
