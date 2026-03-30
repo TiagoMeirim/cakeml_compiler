@@ -9,9 +9,9 @@ all: cakeml_compiler.exe
 cakeml_compiler.exe:
 	dune build cakeml_compiler.exe
 
-translate:
+translate: cakeml_compiler.exe
 	@test -n "$(FILE)" || (echo "Usage: make translate FILE=yourfile.cml" && exit 1)
-	./cakeml_compiler.exe $(FILE)
+	./$< $(FILE)
 
 clean:
 	dune clean
